@@ -2,24 +2,16 @@ package com.doumiao.joke.lang;
 
 import java.util.Date;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-
 public class Member {
-	
+
 	private int id;
 	private String name;
 	private String nick;
-	@JsonIgnore
 	private String email;
-	@JsonIgnore
 	private String mobile;
-	@JsonIgnore
 	private String password;
-	@JsonIgnore
 	private int status;
-	@JsonIgnore
 	private String remark;
-	@JsonIgnore
 	private Date createTime;
 
 	public int getId() {

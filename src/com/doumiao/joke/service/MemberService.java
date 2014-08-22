@@ -12,6 +12,8 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.doumiao.joke.enums.Plat;
 import com.doumiao.joke.lang.Member;
@@ -22,6 +24,8 @@ public class MemberService {
 	@Resource
 	private JdbcTemplate jdbcTemplate;
 
+	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
+			"Exception" }, propagation = Propagation.REQUIRED)
 	public Member createMember(final Member u) {
 		final String sql = "insert into uc_member(name, nick, email, mobile, password, status, remark) VALUES(?,?,?,?,?,?,?)";
 		KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -58,12 +62,11 @@ public class MemberService {
 	 *            第三方绑定信息
 	 * @return 返回绑定后的用户
 	 */
+	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
+			"Exception" }, propagation = Propagation.REQUIRED)
 	public Member bindThirdPlat(Member u, Plat plat, String openId,
 			String token, Map<String, String> params) {
 		u = createMember(u);
-		if (u == null) {
-			return null;
-		}
 		jdbcTemplate
 				.update("insert into uc_thirdplat_binding(member_id, plat, open_id, token, ext1, ext2, ext3, ext4, ext5) values(?,?,?,?,?,?,?,?,?)",
 						u.getId(), plat.toString(), openId, token,
