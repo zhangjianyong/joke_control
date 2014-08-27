@@ -12,6 +12,10 @@ public class Config {
 		config.put(key, value);
 	}
 
+	public static String get(String key) {
+		return config.get(key);
+	}
+	
 	public static String get(String key,String defaultValue) {
 		String v = config.get(key);
 		if(StringUtils.isBlank(v)){
