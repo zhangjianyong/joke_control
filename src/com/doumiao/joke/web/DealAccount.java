@@ -89,6 +89,12 @@ public class DealAccount {
 			@RequestParam(value = "uid") final int uid,
 			@RequestParam(value = "account") final String account,
 			@RequestParam(value = "wealth") final int wealth) {
+		if(StringUtils.isBlank(account)){
+			return new Result(false, "faild", "账号不能为空", "");
+		}
+		if(wealth<=0){
+			return new Result(false, "faild", "对换积分不能小于等于零", "");
+		}
 		try {
 			// 生成中奖流水
 			String[] serialNumber = SerialNumberGenerator.generate(3);
