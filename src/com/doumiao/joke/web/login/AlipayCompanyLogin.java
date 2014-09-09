@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -26,6 +27,7 @@ import com.alipay.api.response.AlipaySystemOauthTokenResponse;
 import com.doumiao.joke.lang.Function;
 import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.MemberService;
+import com.doumiao.joke.vo.Result;
 
 @Controller
 public class AlipayCompanyLogin {
@@ -40,19 +42,30 @@ public class AlipayCompanyLogin {
 	@Resource
 	private ObjectMapper objectMapper;
 
+	private String apiurl = "https://openapi.alipay.com/gateway.do";
+	@RequestMapping("/alipay_company_login_view")
+	public String loginView()
+			throws IOException {
+		return "/alipay_company_login_view";
+	}
 	@RequestMapping("/alipay_company_login")
-	public String login(HttpServletRequest request, HttpServletResponse response)
+	public String login(HttpServletRequest request,
+			HttpServletResponse response,
+			@RequestParam(value = "scope", required = false) String scope)
 			throws IOException {
 		try {
 			String url = "https://openauth.alipay.com/oauth2/authorize.htm";
 			List<String[]> params = new ArrayList<String[]>();
-			params.add(new String[] { "client_id", Config.get("alipay_company_appid") });// String|是|客户端标识符,
-																			// 等同与appkey
-			params.add(new String[] { "redirect_uri",
-					"http://control.yixiaoqianjin.com/alipay_company_callback" });// String|否|url授权的回调地址,为空时用应用的callback_url
-			params.add(new String[] { "scope", "p" });// String|否|空或者p|访问请求的作用域，需要支付授权时传p
-			params.add(new String[] { "state", "" });// String|否|维持应用的状态，此参数授权成功后会原样带回.
-			params.add(new String[] { "view", "" });// String|否|空或者wap|授权页面的视图类型,PC上使用时传空,wap版本授权时传入wap.
+			params.add(new String[] { "client_id",
+					Config.get("alipay_company_appid") });// String|是|客户端标识符,
+			// 等同与appkey
+//			params.add(new String[] { "redirect_uri",
+//					"http://control.yixiaoqianjin.com/alipay_company_callback" });// String|否|url授权的回调地址,为空时用应用的callback_url
+			if (StringUtils.isNotBlank(scope)) {
+				params.add(new String[] { "scope", "p" });// String|否|空或者p|访问请求的作用域，需要支付授权时传p
+			}
+//			params.add(new String[] { "state", "" });// String|否|维持应用的状态，此参数授权成功后会原样带回.
+//			params.add(new String[] { "view", "" });// String|否|空或者wap|授权页面的视图类型,PC上使用时传空,wap版本授权时传入wap.
 			url = Function.joinUrl(url, params);
 			return "redirect:" + url;
 		} catch (Exception e) {
@@ -64,9 +77,13 @@ public class AlipayCompanyLogin {
 	@RequestMapping("/alipay_company_callback")
 	public String callback(HttpServletRequest request,
 			HttpServletResponse response,
-			@RequestParam(value = "code") String code) {
+			@RequestParam(value = "code",required = false) String code) {
+		if(StringUtils.isBlank(code)){
+			request.setAttribute("result", new Result(false,"params.invalid","alipay.company.callback.code.empty",null));
+			return "/error";
+		}
 		AlipayClient client = new DefaultAlipayClient(
-				"https://openapi.alipay.com/gateway.do",
+				apiurl,
 				Config.get("alipay_company_appid"),
 				Config.get("alipay_company_private_key"), "json");
 		AlipaySystemOauthTokenRequest req = new AlipaySystemOauthTokenRequest();
@@ -83,7 +100,7 @@ public class AlipayCompanyLogin {
 			request.getSession().setAttribute("alipay_company_user", true);
 		} catch (AlipayApiException e) {
 			log.error(e, e);
-			return "redirect:/error";
+			return "/error";
 		}
 		return "redirect:/alipay_company_view";
 	}
@@ -95,7 +112,7 @@ public class AlipayCompanyLogin {
 			return "redirect:/alipay_company_login";
 		}
 		AlipayClient client = new DefaultAlipayClient(
-				"https://openapi.alipay.com/gateway.do",
+				apiurl,
 				Config.get("alipay_company_appid"),
 				Config.get("alipay_company_private_key"), "json");
 		AlipayPointBalanceGetRequest req = new AlipayPointBalanceGetRequest();

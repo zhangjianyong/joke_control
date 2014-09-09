@@ -24,7 +24,6 @@ import com.alipay.api.request.AlipaySystemOauthTokenRequest;
 import com.alipay.api.response.AlipayPointBudgetGetResponse;
 import com.alipay.api.response.AlipaySystemOauthTokenResponse;
 import com.doumiao.joke.lang.Function;
-import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.MemberService;
 
 @Controller
