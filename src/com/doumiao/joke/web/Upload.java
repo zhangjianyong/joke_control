@@ -1,7 +1,6 @@
 package com.doumiao.joke.web;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
 
@@ -62,9 +61,7 @@ public class Upload {
 		fileMeta.setFileType(mf.getContentType());
 		try {
 			fileMeta.setBytes(mf.getBytes());
-			FileCopyUtils.copy(mf.getBytes(),
-					new FileOutputStream(Config.get("pic_fetch_save_path")
-							+ name));
+			FileCopyUtils.copy(mf.getBytes(),file);
 		} catch (IOException e) {
 			log.error(e, e);
 			return new Result(false,"faild","图片上传失败",null);
