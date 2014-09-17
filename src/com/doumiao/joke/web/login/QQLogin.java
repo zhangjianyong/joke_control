@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.doumiao.joke.coder.DESCoder;
 import com.doumiao.joke.enums.Plat;
 import com.doumiao.joke.lang.CookieUtils;
-import com.doumiao.joke.lang.Member;
 import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.MemberService;
+import com.doumiao.joke.vo.Member;
 import com.qq.connect.api.OpenID;
 import com.qq.connect.api.qzone.UserInfo;
 import com.qq.connect.javabeans.AccessToken;
@@ -113,7 +113,7 @@ public class QQLogin {
 			byte[] des = DESCoder.encrypt(userJson.getBytes(charset),
 					key.getBytes(charset));
 			byte[] loginuser = DESCoder.encryptBASE64(des);
-			CookieUtils.createCookie(response, domain, "loginuser", new String(
+			CookieUtils.createCookie(response, domain, "_user", new String(
 					loginuser, charset), "/", ctime * 60 * 60, false);
 
 			return "redirect:" + target;

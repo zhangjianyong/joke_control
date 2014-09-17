@@ -1,4 +1,4 @@
-package com.doumiao.joke.lang;
+package com.doumiao.joke.vo;
 
 import java.util.Date;
 

@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.doumiao.joke.enums.Plat;
-import com.doumiao.joke.lang.Member;
+import com.doumiao.joke.vo.Member;
 
 @Service
 public class MemberService {

@@ -25,7 +25,7 @@ public class LoginController {
 			@RequestParam(value="t",required=false) String target) {
 		String website = Config.get("system_website_url","");
 		String domain = Config.get("cookie_domain","");
-		CookieUtils.deleteCookie(response, domain, "loginuser");
+		CookieUtils.deleteCookie(response, domain, "_user");
 		CookieUtils.deleteCookie(response, domain, "user");
 		if(StringUtils.isBlank(target)){
 			target=website;

@@ -51,4 +51,5 @@
 	<bean id="fetchDataQueue" class="java.util.concurrent.LinkedBlockingQueue">
 		<constructor-arg index="0" value="1000" />
 	</bean>
+	<bean id="multipartResolver"  class="org.springframework.web.multipart.commons.CommonsMultipartResolver" />
 </beans>
