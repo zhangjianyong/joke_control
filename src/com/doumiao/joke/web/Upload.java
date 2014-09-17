@@ -52,7 +52,7 @@ public class Upload {
 		int month = c.get(Calendar.MONTH) + 1;
 		long millis = c.getTimeInMillis();
 		String name = "/" + year + "/" + month + "/" + millis + "." + picType;
-		File file = new File(Config.get("pic_fetch_save_path") + name);
+		File file = new File(Config.get("pic_upload_path") + name);
 		if (!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
 		}
