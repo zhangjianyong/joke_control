@@ -10,5 +10,6 @@
 	授权过期时间(s):${config.alipay_company_expires }<br>
 	刷新token:${config.alipay_company_refresh_token }<br>
 	集分宝余额:${pointAmount }<br>
+	采购集分宝余额:${budgetAmount }<br>
 </body>
 </html>
