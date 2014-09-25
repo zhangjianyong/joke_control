@@ -18,6 +18,7 @@ public class DeleteUpDownLog {
 	@Scheduled(cron="0 0 0 ? * *")
 	public void list() {
 		jdbcTemplate.execute("truncate table joke_article_updown");
+		jdbcTemplate.execute("update uc_account set s1=0 where s1>0");
 		if(log.isInfoEnabled()){
 			log.info("truncate table joke_article_updown");
 		}
