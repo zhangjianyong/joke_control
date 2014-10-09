@@ -9,6 +9,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,43 +39,63 @@ public class DealAccount {
 	private AccountService accountService;
 	private static final Log log = LogFactory.getLog(DealAccount.class);
 
+	/**
+	 * 发放平台积分
+	 * 
+	 * @param request
+	 * @param response
+	 * @param json
+	 * @return #Result
+	 */
 	@SuppressWarnings("unchecked")
 	@ResponseBody
 	@RequestMapping(value = "/pay", method = RequestMethod.POST)
-	public synchronized Result dealAccount(HttpServletRequest request,
+	public synchronized Result pay(
+			HttpServletRequest request,
 			HttpServletResponse response,
-			@RequestParam(value = "json") String json) {
+			@RequestParam(value = "accountLog", required = false) String accountLog) {
 		try {
-			List<Map<String, Object>> logs = objectMapper.readValue(json,
-					List.class);
-			List<AccountLog> _logs = new ArrayList<AccountLog>(logs.size());
-			for (Map<String, Object> l : logs) {
-				// 组装并验证数据合法性
-				AccountLog log = new AccountLog();
-				log.setMeberId((Integer) l.get("u"));
-				log.setAccount(Account.valueOf((String) l.get("a")));
-				log.setwealthType(WealthType.valueOf((String) l.get("t")));
-				log.setWealth((Integer) l.get("w"));
-				log.setStatus(AccountLogStatus.valueOf((String) l.get("s")));
-				log.setSerialNumber(StringUtils.defaultIfBlank((String) l.get("sn"), null));
-				log.setSubSerialNmumber(StringUtils.defaultIfBlank((String) l.get("ssn"), null));
-				log.setRemark(StringUtils.defaultIfBlank((String) l.get("r"), null));
-				log.setOperator(StringUtils.defaultIfBlank((String) l.get("o"), null));
-				log.setWealthTime((Date) l.get("wt"));
-				_logs.add(log);
-				
+			List<AccountLog> _scoreLogs = ListUtils.EMPTY_LIST;
+			if (StringUtils.isNotBlank(accountLog)) {
+				List<Map<String, Object>> accountLogs = objectMapper.readValue(
+						accountLog, List.class);
+				_scoreLogs = new ArrayList<AccountLog>(accountLogs.size());
+				for (Map<String, Object> l : accountLogs) {
+					// 组装并验证数据合法性
+					AccountLog log = new AccountLog();
+					log.setMemberId((Integer) l.get("u"));
+					log.setAccount(Account.valueOf((String) l.get("a")));
+					log.setWealthType(WealthType.valueOf((String) l.get("t")));
+					log.setWealth((Integer) l.get("w"));
+					log.setStatus(AccountLogStatus.valueOf((String) l.get("s")));
+					log.setSerialNumber(StringUtils.defaultIfBlank(
+							(String) l.get("sn"), null));
+					log.setSubSerialNmumber(StringUtils.defaultIfBlank(
+							(String) l.get("ssn"), null));
+					log.setRemark(StringUtils.defaultIfBlank(
+							(String) l.get("r"), null));
+					log.setOperator(StringUtils.defaultIfBlank(
+							(String) l.get("o"), null));
+					log.setWealthTime((Date) l.get("wt"));
+					_scoreLogs.add(log);
+				}
 			}
-			// 支付
-			accountService.batchPay(_logs);
+
+			if (_scoreLogs.size() > 0) {
+				accountService.batchPay(_scoreLogs);
+			} else {
+				return new Result(false, "param.error", "系统错误", null);
+			}
 			return new Result(true, "success", "交易成功", null);
 		} catch (Exception e) {
 			log.error(e, e);
 			return new Result(false, "faild", "交易失败", e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * 对换集分宝
+	 * 
 	 * @param request
 	 * @param response
 	 * @param uid
@@ -83,32 +104,33 @@ public class DealAccount {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("/alipay_exchange")
+	@RequestMapping("/exchange")
 	public Result alipayExchange(HttpServletRequest request,
 			HttpServletResponse response,
 			@RequestParam(value = "uid") final int uid,
 			@RequestParam(value = "account") final String account,
-			@RequestParam(value = "wealth") final int wealth) {
-		if(StringUtils.isBlank(account)){
-			return new Result(false, "faild", "账号不能为空", "");
+			@RequestParam(value = "wealth") final int wealth,
+			@RequestParam(value = "plat") final String plat) {
+		if (StringUtils.isBlank(account)) {
+			return new Result(false, "faild", "账号不能为空", null);
 		}
-		if(wealth<=0){
-			return new Result(false, "faild", "对换积分不能小于等于零", "");
+		if (wealth <= 0) {
+			return new Result(false, "faild", "兑换积分不能小于等于零", null);
 		}
+		Plat p = Plat.valueOf(plat);
 		try {
 			// 生成中奖流水
 			String[] serialNumber = SerialNumberGenerator.generate(3);
 			AccountLog log = new AccountLog(uid, WealthType.THIRDPLAT_EXCHANGE,
-					Account.S2, -wealth, serialNumber[0], serialNumber[1], null,
-					AccountLogStatus.PAY, "system", null);
-			ThirdPlatAccountLog _log = new ThirdPlatAccountLog(uid,
-					Plat.ALIPAY, account, wealth, serialNumber[0],
-					serialNumber[2], null, AccountLogStatus.UNPAY, "system");
-			accountService.exchangeJFB(_log, log);
+					Account.S2, -wealth, serialNumber[0], serialNumber[1],
+					null, AccountLogStatus.PAYED, "system", null);
+			ThirdPlatAccountLog _log = new ThirdPlatAccountLog(uid, p, account,
+					wealth, serialNumber[0], serialNumber[2], null,
+					AccountLogStatus.UNPAY, "system");
+			accountService.exchange(_log, log);
 		} catch (Exception e) {
-			log.error(e, e);
-			return new Result(true, "faild", "对换失败", "");
+			return new Result(false, "faild", e.getMessage(), null);
 		}
-		return new Result(true, "success", "对换成功", "");
+		return new Result(true, "success", "对换成功", null);
 	}
 }

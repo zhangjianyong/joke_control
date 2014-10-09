@@ -4,7 +4,7 @@ import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.Plat;
 
 public class ThirdPlatAccountLog {
-	private int meberId;
+	private int memberId;
 	private Plat plat;
 	private String account;
 	private int wealth;
@@ -17,11 +17,12 @@ public class ThirdPlatAccountLog {
 	public ThirdPlatAccountLog() {
 	}
 
-	public ThirdPlatAccountLog(int meberId, Plat plat, String account,
-			int wealth, String serialNumber, String subSerialNmumber,
-			String remark, AccountLogStatus status, String operator) {
+	public ThirdPlatAccountLog(int memberId, Plat plat, String account,
+		 int wealth, String serialNumber,
+			String subSerialNmumber, String remark, AccountLogStatus status,
+			String operator) {
 		super();
-		this.meberId = meberId;
+		this.memberId = memberId;
 		this.plat = plat;
 		this.account = account;
 		this.wealth = wealth;
@@ -32,12 +33,12 @@ public class ThirdPlatAccountLog {
 		this.operator = operator;
 	}
 
-	public int getMeberId() {
-		return meberId;
+	public int getMemberId() {
+		return memberId;
 	}
 
-	public void setMeberId(int meberId) {
-		this.meberId = meberId;
+	public void setMemberId(int meberId) {
+		this.memberId = meberId;
 	}
 
 	public Plat getPlat() {

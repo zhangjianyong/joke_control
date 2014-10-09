@@ -7,7 +7,7 @@ import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.WealthType;
 
 public class AccountLog {
-	private int meberId;
+	private int memberId;
 	private WealthType wealthType;
 	private Account account;
 	private int wealth;
@@ -21,12 +21,12 @@ public class AccountLog {
 	public AccountLog() {
 	};
 
-	public AccountLog(int meberId, WealthType wealthType, Account account,
+	public AccountLog(int memberId, WealthType wealthType, Account account,
 			int wealth, String serialNumber, String subSerialNmumber,
 			String remark, AccountLogStatus status, String operator,
 			Date wealthTime) {
 		super();
-		this.meberId = meberId;
+		this.memberId = memberId;
 		this.wealthType = wealthType;
 		this.account = account;
 		this.wealth = wealth;
@@ -38,19 +38,19 @@ public class AccountLog {
 		this.wealthTime = wealthTime;
 	}
 
-	public int getMeberId() {
-		return meberId;
+	public int getMemberId() {
+		return memberId;
 	}
 
-	public void setMeberId(int meberId) {
-		this.meberId = meberId;
+	public void setMemberId(int memberId) {
+		this.memberId = memberId;
 	}
 
-	public WealthType getwealthType() {
+	public WealthType getWealthType() {
 		return wealthType;
 	}
 
-	public void setwealthType(WealthType wealthType) {
+	public void setWealthType(WealthType wealthType) {
 		this.wealthType = wealthType;
 	}
 

@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -12,15 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.Plat;
+import com.doumiao.joke.web.DealAccount;
 
 @Service
 public class AccountService {
 
 	@Resource
 	private JdbcTemplate jdbcTemplate;
+	private static final Log log = LogFactory.getLog(DealAccount.class);
 
 	/**
-	 * 批量积分支付
+	 * 批量平台积分支付
 	 * 
 	 * @see #pay()
 	 * @param logs
@@ -28,54 +32,58 @@ public class AccountService {
 	 */
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
 			"Exception" }, propagation = Propagation.REQUIRED)
-	public synchronized void batchPay(List<AccountLog> logs) throws Exception {
-		for (AccountLog log : logs) {
+	public synchronized void batchPay(List<AccountLog> accountLogs)
+			throws Exception {
+		for (AccountLog log : accountLogs) {
 			pay(log);
 		}
 	}
 
 	/**
-	 * 积分支付
+	 * 平台积分支付
 	 * 
-	 * @param log
+	 * @param accountLog
 	 * @throws Exception
 	 */
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
 			"Exception" }, propagation = Propagation.REQUIRED)
-	public synchronized void pay(AccountLog log) throws Exception {
+	public synchronized void pay(AccountLog accountLog) throws Exception {
 
 		int balance = jdbcTemplate.queryForInt("select "
-				+ log.getAccount().name()
-				+ " from uc_account where member_id = ?", log.getMeberId());
+				+ accountLog.getAccount().name()
+				+ " from uc_account where member_id = ?",
+				accountLog.getMemberId());
 
-		// 计算本次后账户余额
-		if (AccountLogStatus.PAY.equals(log.getStatus())) {
-			balance += log.getWealth();
-		} else if (AccountLogStatus.UNPAY.equals(log.getStatus())) {
-			throw new Exception("uncheck log isn't allowed");
-		}
-
+		balance += accountLog.getWealth();
 		if (balance < 0) {
-			throw new Exception("balance less than 0,memberId:"
-					+ log.getMeberId());
+			log.info("balance less than 0,memberId:" + accountLog.getMemberId());
+			throw new Exception("余额不足");
 		}
+		try {
+			jdbcTemplate
+					.update("insert into uc_account_log "
+							+ "(member_id, wealth_type, account, wealth, serial_number, sub_serial_number, remark, status, operator, wealth_balance, wealth_time) "
+							+ "values (?,?,?,?,?,?,?,?,?,?,?)", accountLog
+							.getMemberId(), accountLog.getWealthType().name(),
+							accountLog.getAccount().name(), accountLog
+									.getWealth(), accountLog.getSerialNumber(),
+							accountLog.getSubSerialNmumber(), accountLog
+									.getRemark(),
+							accountLog.getStatus().name(), accountLog
+									.getOperator(), balance, null);
 
-		jdbcTemplate
-				.update("insert into uc_account_log "
-						+ "(member_id, wealth_type, account, wealth, serial_number, sub_serial_number, remark, status, operator, wealth_balance, wealth_time) "
-						+ "values (?,?,?,?,?,?,?,?,?,?,?)", log.getMeberId(),
-						log.getwealthType().name(), log.getAccount().name(),
-						log.getWealth(), log.getSerialNumber(), log
-								.getSubSerialNmumber(), log.getRemark(), log
-								.getStatus().name(), log.getOperator(),
-						balance, null);
-
-		jdbcTemplate.update("update uc_account set " + log.getAccount().name()
-				+ "= ? where member_id = ?", balance, log.getMeberId());
+			jdbcTemplate.update("update uc_account set "
+					+ accountLog.getAccount().name()
+					+ "= ? where member_id = ?", balance,
+					accountLog.getMemberId());
+		} catch (Exception e) {
+			log.error(e, e);
+			throw new Exception("数据库错误");
+		}
 	}
 
 	/**
-	 * 打集分宝申请
+	 * 第三方积分支付
 	 * 
 	 * @see #pay()
 	 * @param logs
@@ -83,48 +91,50 @@ public class AccountService {
 	 */
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
 			"Exception" }, propagation = Propagation.REQUIRED)
-	public synchronized void pay_jfb(ThirdPlatAccountLog log) throws Exception {
+	public synchronized void payThirdScore(ThirdPlatAccountLog accountLog)
+			throws Exception {
 		try {
-			// 检查是否有该账号
+			// 检查是否有该第三方平台账号
 			int id = jdbcTemplate
 					.queryForInt(
-							"select id from uc_thirdplat_account where member_id = ? and plat=? and account=?",
-							log.getMeberId(), Plat.ALIPAY.name(),
-							log.getAccount());
+							"select id from uc_thirdplat_account where member_id = ? and plat = ?",
+							accountLog.getMemberId(), accountLog.getPlat()
+									.name());
 			// 账号存在,则更新最后支付时间
 			jdbcTemplate
-					.update("update uc_thirdplat_account set wealth = wealth+?, update_time = null where id=?",
-							log.getWealth(), id);
+					.update("update uc_thirdplat_account set total = total + ?, update_time = ?, account = ? where id = ?",
+							accountLog.getWealth(), null,
+							accountLog.getAccount(), id);
 		} catch (EmptyResultDataAccessException erdae) {
 			// 如不存在,则添加账号
 			jdbcTemplate
-					.update("insert into uc_thirdplat_account(member_id, plat, account, wealth, create_time) values (?,?,?,?,?)",
-							log.getMeberId(), Plat.ALIPAY.name(),
-							log.getAccount(), log.getWealth(), null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
+					.update("insert into uc_thirdplat_account(member_id, plat, account, total, create_time) values (?,?,?,?,?)",
+							accountLog.getMemberId(), accountLog.getPlat()
+									.name(), accountLog.getAccount(),
+							accountLog.getWealth(), null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
+		} catch (Exception e) {
+			log.error(e, e);
+			throw new Exception("数据库错误");
 		}
-		// 插入第三方支付流水
-		jdbcTemplate
-				.update("insert into uc_thirdplat_account_log(member_id, plat, account, wealth, status, serial_number, sub_serial_number, remark, operator, create_time) values (?,?,?,?,?,?,?,?,?,?)",
-						log.getMeberId(), Plat.ALIPAY.name(), log.getAccount(),
-						log.getWealth(), log.getStatus().name(),
-						log.getSerialNumber(), log.getSubSerialNmumber(),
-						log.getRemark(), log.getOperator(), null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
+		try {
+			// 插入第三方支付流水
+			jdbcTemplate
+					.update("insert into uc_thirdplat_account_log(member_id, plat, account, wealth, status, serial_number, sub_serial_number, remark, operator, create_time) values (?,?,?,?,?,?,?,?,?,?)",
+							accountLog.getMemberId(), Plat.ALIPAY.name(),
+							accountLog.getAccount(), accountLog.getWealth(),
+							AccountLogStatus.UNPAY// 必须为未支付，第三方积分统一发放
+									.name(), accountLog.getSerialNumber(),
+							accountLog.getSubSerialNmumber(),
+							accountLog.getRemark(), accountLog.getOperator(),
+							null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
+		} catch (Exception e) {
+			log.error(e, e);
+			throw new Exception("数据库错误");
+		}
 	}
 
 	/**
-	 * 集分宝支付
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public static void addPoint(int amount, String alipayName,
-			String outBizNo, String alipayUserId, String createTime,
-			String dispatchConfigId) throws Exception {
-
-	}
-
-	/**
-	 * 积分对换集分宝
+	 * 第三方积分兑换
 	 * 
 	 * @see #pay()
 	 * @param logs
@@ -132,9 +142,9 @@ public class AccountService {
 	 */
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
 			"Exception" }, propagation = Propagation.REQUIRED)
-	public synchronized void exchangeJFB(ThirdPlatAccountLog log,
-			AccountLog _log) throws Exception {
+	public synchronized void exchange(ThirdPlatAccountLog log, AccountLog _log)
+			throws Exception {
 		pay(_log);
-		pay_jfb(log);
+		payThirdScore(log);
 	}
 }

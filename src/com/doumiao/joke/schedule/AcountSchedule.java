@@ -118,7 +118,7 @@ public class AcountSchedule {
 				int balance = balance_before;
 
 				if (status.equals(AccountLogStatus.REJECT)) {
-				} else if (status.equals(AccountLogStatus.PAY)) {
+				} else if (status.equals(AccountLogStatus.PAYED)) {
 					balance += wealth;
 				} else if (status.equals(AccountLogStatus.UNPAY)) {
 					Calendar now = Calendar.getInstance();
@@ -127,7 +127,7 @@ public class AcountSchedule {
 						continue;
 					} else {
 						balance += wealth;
-						status = AccountLogStatus.PAY;
+						status = AccountLogStatus.PAYED;
 					}
 				} else {
 					log.error("uc_account_log_tmp is error,tmplogid:" + tmpId);

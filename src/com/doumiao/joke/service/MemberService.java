@@ -48,7 +48,9 @@ public class MemberService {
 		}, keyHolder);
 		int id = keyHolder.getKey().intValue();
 		jdbcTemplate.update("insert into uc_account(member_id) VALUES(?)",
-				new Object[] { id });
+				id);
+//		jdbcTemplate.update("insert into uc_thirdplat_account(member_id, plat) VALUES(?,?)",
+//				id,Plat.ALIPAY.name());
 		u.setId(id);
 		return u;
 	}

@@ -45,14 +45,14 @@ public class AlipayPointSchedule {
 				req.setUserSymbolType("ALIPAY_LOGON_ID");
 				req.setPointCount(((Integer)l.get("wealth")).longValue());
 				req.setMerchantOrderNo((String) l.get("sub_serial_number"));
-				req.setMemo("[" + Config.get("system_website_name") + "]积分对换");
+				req.setMemo("[" + Config.get("system_website_name") + "]积分兑换");
 				req.setOrderTime(new Date());
-				AlipayPointOrderAddResponse response = client.execute(req,"201409BBaff4d0799d2343ed8fc06f1596650955");
+				AlipayPointOrderAddResponse response = client.execute(req,Config.get("alipay_company_token"));
 				if (response.isSuccess()
 						|| "isv.out-biz-no-exist" == response.getErrorCode()) {
 					jdbcTemplate
 							.update("update uc_thirdplat_account_log set status = ? where id=?",
-									AccountLogStatus.PAY.name(), id);
+									AccountLogStatus.PAYED.name(), id);
 				}
 			} catch (Exception e) {
 				log.error(e, e);
