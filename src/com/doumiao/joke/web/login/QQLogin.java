@@ -50,8 +50,10 @@ public class QQLogin {
 			@RequestParam(value = "t", required = false) String target)
 			throws IOException {
 		try {
+			String refferer = request.getHeader("Referer");
+			target = target == null ? refferer : target;
 			if (StringUtils.isBlank(target)) {
-				target = Config.get("system_website_url","");
+				target = Config.get("system_website_url", "");
 			}
 			String authUrl = new Oauth().getAuthorizeURL(request);
 			request.getSession().setAttribute("qq_target", target);
@@ -69,7 +71,7 @@ public class QQLogin {
 		// 查取登录成功后的目标地址
 		String target = (String) request.getSession().getAttribute("qq_target");
 		if (StringUtils.isBlank(target)) {
-			target = Config.get("system_website_url","");
+			target = Config.get("system_website_url", "");
 		}
 		// 取第三方平台的用户信息
 		UserInfoBean userInfoBean = null;
@@ -99,11 +101,11 @@ public class QQLogin {
 						params);
 			}
 
-			String domain = Config.get("cookie_domain","");
-			String key = Config.get("system_cookie_key","");
-			String charset = Config.get("system_charset","utf-8");
+			String domain = Config.get("cookie_domain", "");
+			String key = Config.get("system_cookie_key", "");
+			String charset = Config.get("system_charset", "utf-8");
 			Map<String, Object> loginCookie = new HashMap<String, Object>(2);
-			int ctime = Config.getInt("cookie_time",1);
+			int ctime = Config.getInt("cookie_time", 1);
 			loginCookie.put("id", u.getId());
 			loginCookie.put("nick", URLEncoder.encode(u.getNick(), "UTF-8"));
 			String userJson = objectMapper.writeValueAsString(loginCookie);
