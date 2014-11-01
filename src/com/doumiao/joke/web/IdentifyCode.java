@@ -83,6 +83,7 @@ public class IdentifyCode {
 			return new Result(false, "faild", "系统错误", null);
 		}
 		if (capText == null || !StringUtils.equals(capText, code)) {
+			log.warn("identify code check faild:"+code+"("+capText+")");
 			return new Result(false, "faild", "验证码错误", null);
 		}
 		return new Result(true, "success", "验证通过", null);
