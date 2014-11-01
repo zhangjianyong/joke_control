@@ -25,7 +25,7 @@ public class AlipayPointSchedule {
 	@Resource
 	private JdbcTemplate jdbcTemplate;
 
-	@Scheduled(fixedDelay = 60000)
+	//@Scheduled(fixedDelay = 60000)
 	protected void dealThirdplatAccountLog() {
 		if (log.isDebugEnabled()) {
 			log.debug("deal alipay point log start");
