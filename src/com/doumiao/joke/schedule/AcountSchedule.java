@@ -34,7 +34,7 @@ public class AcountSchedule {
 	@Resource
 	private DataSource dataSource;
 
-	//@Scheduled(fixedDelay = 60000)
+	@Scheduled(fixedDelay = 60000)
 	protected void dealTmpAccountLog() {
 		if (log.isDebugEnabled()) {
 			log.debug("deal account tmp log start");
