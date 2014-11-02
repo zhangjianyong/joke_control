@@ -47,7 +47,7 @@ public class IdentifyCode {
 		try {
 			jdbcTemplate
 					.update("insert uc_identify_code(k,c) values (?,?) on duplicate key update c = ?",
-							request.getSession().getId(), capText, capText);
+							System.currentTimeMillis(), capText, capText);
 			BufferedImage bi = captchaProducer.createImage(capText);
 			ByteOutputStream out = new ByteOutputStream();
 			ImageIO.write(bi, "jpg", out);
