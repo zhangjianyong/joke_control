@@ -45,16 +45,17 @@ public class IdentifyCode {
 		String capText = captchaProducer.createText().toLowerCase();
 		// ServletOutputStream out = null;
 		try {
+			String key = String.valueOf(System.currentTimeMillis());
 			jdbcTemplate
 					.update("insert uc_identify_code(k,c) values (?,?) on duplicate key update c = ?",
-							System.currentTimeMillis(), capText, capText);
+							key, capText, capText);
 			BufferedImage bi = captchaProducer.createImage(capText);
 			ByteOutputStream out = new ByteOutputStream();
 			ImageIO.write(bi, "jpg", out);
 			String content = BASE64Encoder.class.newInstance().encode(
 					out.getBytes());
 			out.flush();
-			return new Result(true, request.getSession().getId(), "",
+			return new Result(true, key, "",
 					"data:image/jpg;base64," + content);
 
 		} catch (Exception e) {
