@@ -46,6 +46,7 @@ public class AlipayPoint {
 						"select * from uc_thirdplat_account_log where status=? and plat=?",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 		for (Map<String, Object> l : logs) {
+			long start = System.currentTimeMillis();
 			try {
 				int id = (int) l.get("id");
 				int memberId = (int) l.get("member_id");
@@ -60,6 +61,18 @@ public class AlipayPoint {
 				req.setMerchantOrderNo(ssn);
 				req.setMemo("[" + Config.get("system_website_name") + "]积分兑换");
 				req.setOrderTime(new Date());
+
+				// 如果账号有误,退回积分,更新状态为
+				AccountLog ll = new AccountLog();
+				ll.setMemberId(memberId);
+				ll.setAccount(Account.S2);
+				ll.setWealthType(WealthType.REFUND);
+				ll.setWealth(-wealth);
+				ll.setStatus(AccountLogStatus.PAYED);
+				ll.setSerialNumber(sn);
+				ll.setSubSerialNmumber(ssn + "r");
+				ll.setOperator("system");
+
 				AlipayPointOrderAddResponse response = client.execute(req,
 						Config.get("alipay_company_token"));
 				if (response.isSuccess()
@@ -73,27 +86,23 @@ public class AlipayPoint {
 							.update("update uc_thirdplat_account set total = total + ?, update_time = ?, account = ? where id = ?",
 									wealth, null, account, id);
 				} else if (response.getSubCode().equals("isp.no_exist_user")) {
-					// 如果账号不存在,退回积分,更新状态为
-					AccountLog log = new AccountLog();
-					log.setMemberId(memberId);
-					log.setAccount(Account.S2);
-					log.setWealthType(WealthType.REFUND);
-					log.setWealth(-wealth);
-					log.setStatus(AccountLogStatus.PAYED);
-					log.setSerialNumber(sn);
-					log.setSubSerialNmumber(ssn + "r");
-					log.setRemark("第三方账号错误,积分退回");
-					log.setOperator("system");
-					accountService.pay(log);
-					
+					ll.setRemark("第三方账号不存在(" + account + ")");
 					jdbcTemplate
-					.update("update uc_thirdplat_account_log set status = ? where id=?",
-							AccountLogStatus.REJECT.name(), id);
-				}else if(response.getSubCode().equals("isp.budgetcore_invoke_error")){
+							.update("update uc_thirdplat_account_log set status = ? where id=?",
+									AccountLogStatus.REJECT.name(), id);
+				} else if (response.getSubCode().equals("isp.cif_card_freeze")) {
+					ll.setRemark("第三方账号被冻结(" + account + ")");
+					jdbcTemplate
+							.update("update uc_thirdplat_account_log set status = ? where id=?",
+									AccountLogStatus.REJECT.name(), id);
+				} else if (response.getSubCode().equals(
+						"isp.budgetcore_invoke_error")) {
 					break;
 				}
+				accountService.pay(ll);
+				log.debug("point:" + (System.currentTimeMillis() - start));
 			} catch (Exception e) {
-				log.error(e, e);
+				log.error(e.getMessage());
 			}
 		}
 	}
