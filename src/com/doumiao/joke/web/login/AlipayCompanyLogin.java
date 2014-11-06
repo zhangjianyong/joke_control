@@ -26,6 +26,8 @@ import com.alipay.api.request.AlipaySystemOauthTokenRequest;
 import com.alipay.api.response.AlipayPointBalanceGetResponse;
 import com.alipay.api.response.AlipayPointBudgetGetResponse;
 import com.alipay.api.response.AlipaySystemOauthTokenResponse;
+import com.doumiao.joke.enums.AccountLogStatus;
+import com.doumiao.joke.enums.Plat;
 import com.doumiao.joke.lang.Function;
 import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.MemberService;
@@ -55,11 +57,14 @@ public class AlipayCompanyLogin {
 			params.add(new String[] { "client_id",
 					Config.get("alipay_company_appid") });// String|是|客户端标识符,
 			// 等同与appkey
-//			params.add(new String[] { "redirect_uri",
-//					"http://control.yixiaoqianjin.com/alipay_company_callback" });// String|否|url授权的回调地址,为空时用应用的callback_url
+			// params.add(new String[] { "redirect_uri",
+			// "http://control.yixiaoqianjin.com/alipay_company_callback" });//
+			// String|否|url授权的回调地址,为空时用应用的callback_url
 			params.add(new String[] { "scope", "p" });// String|否|空或者p|访问请求的作用域，需要支付授权时传p
-//			params.add(new String[] { "state", "" });// String|否|维持应用的状态，此参数授权成功后会原样带回.
-//			params.add(new String[] { "view", "" });// String|否|空或者wap|授权页面的视图类型,PC上使用时传空,wap版本授权时传入wap.
+			// params.add(new String[] { "state", "" });//
+			// String|否|维持应用的状态，此参数授权成功后会原样带回.
+			// params.add(new String[] { "view", "" });//
+			// String|否|空或者wap|授权页面的视图类型,PC上使用时传空,wap版本授权时传入wap.
 			url = Function.joinUrl(url, params);
 			return "redirect:" + url;
 		} catch (Exception e) {
@@ -71,13 +76,13 @@ public class AlipayCompanyLogin {
 	@RequestMapping("/alipay_company_callback")
 	public String callback(HttpServletRequest request,
 			HttpServletResponse response,
-			@RequestParam(value = "code",required = false) String code) {
-		if(StringUtils.isBlank(code)){
-			request.setAttribute("result", new Result(false,"params.invalid","alipay.company.callback.code.empty",null));
+			@RequestParam(value = "code", required = false) String code) {
+		if (StringUtils.isBlank(code)) {
+			request.setAttribute("result", new Result(false, "params.invalid",
+					"alipay.company.callback.code.empty", null));
 			return "/error";
 		}
-		AlipayClient client = new DefaultAlipayClient(
-				Config.get("alipay_url"),
+		AlipayClient client = new DefaultAlipayClient(Config.get("alipay_url"),
 				Config.get("alipay_company_appid"),
 				Config.get("alipay_company_private_key"), "json");
 		AlipaySystemOauthTokenRequest req = new AlipaySystemOauthTokenRequest();
@@ -105,8 +110,7 @@ public class AlipayCompanyLogin {
 		if (request.getSession().getAttribute("alipay_company_user") == null) {
 			return "redirect:/alipay_company_login";
 		}
-		AlipayClient client = new DefaultAlipayClient(
-				Config.get("alipay_url"),
+		AlipayClient client = new DefaultAlipayClient(Config.get("alipay_url"),
 				Config.get("alipay_company_appid"),
 				Config.get("alipay_company_private_key"), "json");
 		AlipayPointBalanceGetRequest req = new AlipayPointBalanceGetRequest();
@@ -114,9 +118,21 @@ public class AlipayCompanyLogin {
 				Config.get("alipay_company_token"));
 		request.setAttribute("pointAmount", res.getPointAmount());
 		AlipayPointBudgetGetRequest reqb = new AlipayPointBudgetGetRequest();
-		AlipayPointBudgetGetResponse resb = client.execute(reqb, Config.get("alipay_company_token"));
+		AlipayPointBudgetGetResponse resb = client.execute(reqb,
+				Config.get("alipay_company_token"));
 		request.setAttribute("budgetAmount", resb.getBudgetAmount());
 		request.setAttribute("config", Config.getConfig());
+
+		int unpay = jdbcTemplate
+				.queryForInt(
+						"select sum(wealth) from `uc_thirdplat_account_log` where status=? and plat=?",
+						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
+
+		int payed = jdbcTemplate.queryForInt(
+				"select sum(total) from `uc_thirdplat_account` where plat=?",
+				Plat.ALIPAY.name());
+		request.setAttribute("unpay", unpay);
+		request.setAttribute("payed", payed);
 		return "/alipay_company_view";
 	}
 }
