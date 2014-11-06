@@ -120,12 +120,12 @@ public class DealAccount {
 		Plat p = Plat.valueOf(plat);
 		try {
 			// 生成中奖流水
-			String[] serialNumber = SerialNumberGenerator.generate(3);
+			String[] serialNumber = SerialNumberGenerator.generate(2);
 			AccountLog log = new AccountLog(uid, WealthType.THIRDPLAT_EXCHANGE,
 					Account.S2, -wealth, serialNumber[0], serialNumber[1],
 					null, AccountLogStatus.PAYED, "system", null);
 			ThirdPlatAccountLog _log = new ThirdPlatAccountLog(uid, p, account,
-					wealth, serialNumber[0], serialNumber[2], null,
+					wealth, serialNumber[0], serialNumber[1], null,
 					AccountLogStatus.UNPAY, "system");
 			accountService.exchange(_log, log);
 		} catch (Exception e) {

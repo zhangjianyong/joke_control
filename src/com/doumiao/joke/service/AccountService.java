@@ -95,23 +95,18 @@ public class AccountService {
 			throws Exception {
 		try {
 			// 检查是否有该第三方平台账号
-			int id = jdbcTemplate
+			jdbcTemplate
 					.queryForInt(
 							"select id from uc_thirdplat_account where member_id = ? and plat = ?",
 							accountLog.getMemberId(), accountLog.getPlat()
 									.name());
-			// 账号存在,则更新最后支付时间
-			jdbcTemplate
-					.update("update uc_thirdplat_account set total = total + ?, update_time = ?, account = ? where id = ?",
-							accountLog.getWealth(), null,
-							accountLog.getAccount(), id);
 		} catch (EmptyResultDataAccessException erdae) {
 			// 如不存在,则添加账号
 			jdbcTemplate
 					.update("insert into uc_thirdplat_account(member_id, plat, account, total, create_time) values (?,?,?,?,?)",
 							accountLog.getMemberId(), accountLog.getPlat()
 									.name(), accountLog.getAccount(),
-							accountLog.getWealth(), null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
+							0, null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
 		} catch (Exception e) {
 			log.error(e, e);
 			throw new Exception("数据库错误");

@@ -11,5 +11,6 @@
 	刷新token:${config.alipay_company_refresh_token }<br>
 	集分宝余额:${pointAmount }<br>
 	采购集分宝余额:${budgetAmount }<br>
+	<a href="/alipaypoint">发放</a>
 </body>
 </html>
