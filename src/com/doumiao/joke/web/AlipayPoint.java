@@ -67,7 +67,7 @@ public class AlipayPoint {
 				ll.setMemberId(memberId);
 				ll.setAccount(Account.S2);
 				ll.setWealthType(WealthType.REFUND);
-				ll.setWealth(-wealth);
+				ll.setWealth(wealth);
 				ll.setStatus(AccountLogStatus.PAYED);
 				ll.setSerialNumber(sn);
 				ll.setSubSerialNmumber(ssn + "r");
@@ -90,16 +90,18 @@ public class AlipayPoint {
 					jdbcTemplate
 							.update("update uc_thirdplat_account_log set status = ? where id=?",
 									AccountLogStatus.REJECT.name(), id);
+					accountService.pay(ll);
 				} else if (response.getSubCode().equals("isp.cif_card_freeze")) {
 					ll.setRemark("第三方账号被冻结(" + account + ")");
 					jdbcTemplate
 							.update("update uc_thirdplat_account_log set status = ? where id=?",
 									AccountLogStatus.REJECT.name(), id);
+					accountService.pay(ll);
 				} else if (response.getSubCode().equals(
 						"isp.budgetcore_invoke_error")) {
 					break;
 				}
-				accountService.pay(ll);
+				
 				log.debug("point:" + (System.currentTimeMillis() - start));
 			} catch (Exception e) {
 				log.error(e.getMessage());
