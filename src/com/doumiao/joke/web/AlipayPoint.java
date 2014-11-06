@@ -5,13 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -92,6 +89,8 @@ public class AlipayPoint {
 					jdbcTemplate
 					.update("update uc_thirdplat_account_log set status = ? where id=?",
 							AccountLogStatus.REJECT.name(), id);
+				}else if(response.getSubCode().equals("isp.budgetcore_invoke_error")){
+					break;
 				}
 			} catch (Exception e) {
 				log.error(e, e);
