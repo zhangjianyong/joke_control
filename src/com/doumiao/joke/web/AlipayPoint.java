@@ -79,23 +79,23 @@ public class AlipayPoint {
 						|| "isv.out-biz-no-exist" == response.getErrorCode()) {
 					// 打款成功或已打过款,更新打款状态
 					jdbcTemplate
-							.update("update uc_thirdplat_account_log set status = ? where id=?",
-									AccountLogStatus.PAYED.name(), id);
+							.update("update uc_thirdplat_account_log set status = ?,update_time = ? where id=?",
+									AccountLogStatus.PAYED.name(), null, id);
 					// 打款成功更新最后支付时间及总额
 					jdbcTemplate
-							.update("update uc_thirdplat_account set total = total + ?, update_time = ?, account = ? where id = ?",
-									wealth, null, account, id);
+							.update("update uc_thirdplat_account set total = total + ?, account = ?, update_time = ? where id = ?",
+									wealth, account, null, id);
 				} else if (response.getSubCode().equals("isp.no_exist_user")) {
 					ll.setRemark("第三方账号不存在(" + account + ")");
 					jdbcTemplate
-							.update("update uc_thirdplat_account_log set status = ? where id=?",
-									AccountLogStatus.REJECT.name(), id);
+							.update("update uc_thirdplat_account_log set status = ?, update_time = ? where id=?",
+									AccountLogStatus.REJECT.name(), null, id);
 					accountService.pay(ll);
 				} else if (response.getSubCode().equals("isp.cif_card_freeze")) {
 					ll.setRemark("第三方账号被冻结(" + account + ")");
 					jdbcTemplate
-							.update("update uc_thirdplat_account_log set status = ? where id=?",
-									AccountLogStatus.REJECT.name(), id);
+							.update("update uc_thirdplat_account_log set status = ?, update_time = ? where id=?",
+									AccountLogStatus.REJECT.name(), null, id);
 					accountService.pay(ll);
 				} else if (response.getSubCode().equals(
 						"isp.budgetcore_invoke_error")) {
