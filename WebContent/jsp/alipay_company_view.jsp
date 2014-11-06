@@ -5,6 +5,7 @@
 	<title>${config.system_website_name}支付宝账号</title>
 </head>
 <body>
+	错误信息:${error }<br>
 	用户id:${config.alipay_company_user_id }<br>
 	token:${config.alipay_company_token }<br>
 	授权过期时间(s):${config.alipay_company_expires }<br>

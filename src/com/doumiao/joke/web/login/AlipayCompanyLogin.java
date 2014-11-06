@@ -96,7 +96,6 @@ public class AlipayCompanyLogin {
 			Config.set("alipay_company_token", alipayResponse.getAccessToken());
 			Config.set("alipay_company_refresh_token",
 					alipayResponse.getRefreshToken());
-			request.getSession().setAttribute("alipay_company_user", true);
 		} catch (AlipayApiException e) {
 			log.error(e, e);
 			return "/error";
@@ -107,9 +106,6 @@ public class AlipayCompanyLogin {
 	@RequestMapping("/alipay_company_view")
 	public String view(HttpServletRequest request, HttpServletResponse response)
 			throws Exception {
-		if (request.getSession().getAttribute("alipay_company_user") == null) {
-			return "redirect:/alipay_company_login";
-		}
 		AlipayClient client = new DefaultAlipayClient(Config.get("alipay_url"),
 				Config.get("alipay_company_appid"),
 				Config.get("alipay_company_private_key"), "json");
@@ -120,6 +116,13 @@ public class AlipayCompanyLogin {
 		AlipayPointBudgetGetRequest reqb = new AlipayPointBudgetGetRequest();
 		AlipayPointBudgetGetResponse resb = client.execute(reqb,
 				Config.get("alipay_company_token"));
+		
+		
+		if(!resb.isSuccess()&&resb.getSubCode().equals("aop.invalid-auth-token")){
+			return "redirect:/alipay_company_login";
+		}else{
+			request.setAttribute("error", resb.getSubMsg());
+		}
 		request.setAttribute("budgetAmount", resb.getBudgetAmount());
 		request.setAttribute("config", Config.getConfig());
 
