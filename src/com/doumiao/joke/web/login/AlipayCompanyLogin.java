@@ -3,6 +3,7 @@ package com.doumiao.joke.web.login;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -116,26 +117,37 @@ public class AlipayCompanyLogin {
 		AlipayPointBudgetGetRequest reqb = new AlipayPointBudgetGetRequest();
 		AlipayPointBudgetGetResponse resb = client.execute(reqb,
 				Config.get("alipay_company_token"));
-		
-		
-		if(!resb.isSuccess()&&resb.getSubCode().equals("aop.invalid-auth-token")){
+
+		if (!resb.isSuccess()
+				&& resb.getSubCode().equals("aop.invalid-auth-token")) {
 			return "redirect:/alipay_company_login";
-		}else{
+		} else {
 			request.setAttribute("error", resb.getSubMsg());
 		}
 		request.setAttribute("budgetAmount", resb.getBudgetAmount());
 		request.setAttribute("config", Config.getConfig());
 
-		int unpay = jdbcTemplate
-				.queryForInt(
-						"select sum(wealth) from `uc_thirdplat_account_log` where status=? and plat=?",
+		Map<String, Object> info = jdbcTemplate
+				.queryForMap(
+						"select sum(wealth)/100 s, count(1) c from `uc_thirdplat_account_log` where status=? and plat=?",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 
 		int payed = jdbcTemplate.queryForInt(
-				"select sum(total) from `uc_thirdplat_account` where plat=?",
+				"select sum(total)/100 from `uc_thirdplat_account` where plat=?",
 				Plat.ALIPAY.name());
-		request.setAttribute("unpay", unpay);
+
+		Map<String, Object>  day= jdbcTemplate
+				.queryForMap("select count(distinct member_id) m,count(1) c,sum(wealth)/100*1.1 s from `uc_thirdplat_account_log` where to_days(create_time)=to_days(now())");
+
+		List<Map<String, Object>> logs = jdbcTemplate
+				.queryForList(
+						"select * from `uc_thirdplat_account_log` where status=? and plat=? order by create_time desc",
+						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
+
+		request.setAttribute("info", info);
 		request.setAttribute("payed", payed);
+		request.setAttribute("logs", logs);
+		request.setAttribute("day", day);
 		return "/alipay_company_view";
 	}
 }
