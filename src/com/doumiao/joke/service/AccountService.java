@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.Plat;
 import com.doumiao.joke.web.DealAccount;
-import com.sun.swing.internal.plaf.synth.resources.synth;
 
 @Service
 public class AccountService {

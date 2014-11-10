@@ -59,8 +59,12 @@ public class DealAccount {
 			if (StringUtils.isNotBlank(accountLog)) {
 				List<Map<String, Object>> accountLogs = objectMapper.readValue(
 						accountLog, List.class);
-				_scoreLogs = new ArrayList<AccountLog>(accountLogs.size());
-				for (Map<String, Object> l : accountLogs) {
+				int count = accountLogs.size();
+				_scoreLogs = new ArrayList<AccountLog>(count);
+				String[] sn = SerialNumberGenerator
+						.generate(accountLogs.size());
+				for (int i = 0; i < count; i++) {
+					Map<String, Object> l = accountLogs.get(i);
 					// 组装并验证数据合法性
 					AccountLog log = new AccountLog();
 					log.setMemberId((Integer) l.get("u"));
@@ -68,10 +72,8 @@ public class DealAccount {
 					log.setWealthType(WealthType.valueOf((String) l.get("t")));
 					log.setWealth((Integer) l.get("w"));
 					log.setStatus(AccountLogStatus.valueOf((String) l.get("s")));
-					log.setSerialNumber(StringUtils.defaultIfBlank(
-							(String) l.get("sn"), null));
-					log.setSubSerialNmumber(StringUtils.defaultIfBlank(
-							(String) l.get("ssn"), null));
+					log.setSerialNumber(sn[0]);
+					log.setSubSerialNmumber(sn[i + 1]);
 					log.setRemark(StringUtils.defaultIfBlank(
 							(String) l.get("r"), null));
 					log.setOperator(StringUtils.defaultIfBlank(
