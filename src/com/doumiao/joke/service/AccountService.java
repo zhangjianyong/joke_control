@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.Plat;
 import com.doumiao.joke.web.DealAccount;
+import com.sun.swing.internal.plaf.synth.resources.synth;
 
 @Service
 public class AccountService {
@@ -105,8 +106,7 @@ public class AccountService {
 			jdbcTemplate
 					.update("insert into uc_thirdplat_account(member_id, plat, account, total, create_time) values (?,?,?,?,?)",
 							accountLog.getMemberId(), accountLog.getPlat()
-									.name(), accountLog.getAccount(),
-							0, null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
+									.name(), accountLog.getAccount(), 0, null);// null是creat_time字段当插入一条新记录时自动生成与update_time一样的值
 		} catch (Exception e) {
 			log.error(e, e);
 			throw new Exception("数据库错误");
@@ -141,5 +141,33 @@ public class AccountService {
 			throws Exception {
 		pay(_log);
 		payThirdScore(log);
+	}
+
+	/**
+	 * 第三方积分打款失败后,退回积分
+	 * 
+	 * @param ll
+	 * @param logId
+	 * @throws Exception
+	 */
+	public synchronized void reject(AccountLog ll, int logId) throws Exception {
+		jdbcTemplate.update(
+				"update uc_thirdplat_account_log set status = ? where id=?",
+				AccountLogStatus.REJECT.name(), logId);
+		pay(ll);
+	}
+	
+	/**
+	 * 第三方积分打款成功后,修改更新打款状态及支付总额
+	 */
+	public void afterPay(int logId,int wealth,String account,int memberId){
+		// 打款成功或已打过款,更新打款状态
+		jdbcTemplate
+				.update("update uc_thirdplat_account_log set status = ? where id=?",
+						AccountLogStatus.PAYED.name(), logId);
+		// 打款成功更新最后支付时间及总额
+		jdbcTemplate
+				.update("update uc_thirdplat_account set total = total + ?, account = ? where member_id = ? and plat = ?",
+						wealth, account, memberId,Plat.ALIPAY.name());
 	}
 }
