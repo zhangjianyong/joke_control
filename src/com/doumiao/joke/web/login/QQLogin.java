@@ -120,7 +120,7 @@ public class QQLogin {
 
 			return "redirect:" + target;
 		} catch (Exception e) {
-			log.error(e, e);
+			log.error(e.getMessage());
 			return "redirect:/error";
 		}
 	}
