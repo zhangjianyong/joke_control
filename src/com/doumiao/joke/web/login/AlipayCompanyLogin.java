@@ -137,7 +137,7 @@ public class AlipayCompanyLogin {
 				Plat.ALIPAY.name());
 
 		Map<String, Object>  day= jdbcTemplate
-				.queryForMap("select count(distinct member_id) m,count(1) c,sum(wealth)/100*1.1 s from `uc_thirdplat_account_log` where to_days(create_time)=to_days(now())");
+				.queryForMap("select count(distinct member_id) m,count(1) c,sum(wealth)/100*1.1 s from `uc_account_log` where to_days(create_time)=to_days(now())");
 
 		List<Map<String, Object>> logs = jdbcTemplate
 				.queryForList(
