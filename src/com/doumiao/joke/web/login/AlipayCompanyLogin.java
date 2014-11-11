@@ -27,8 +27,10 @@ import com.alipay.api.request.AlipaySystemOauthTokenRequest;
 import com.alipay.api.response.AlipayPointBalanceGetResponse;
 import com.alipay.api.response.AlipayPointBudgetGetResponse;
 import com.alipay.api.response.AlipaySystemOauthTokenResponse;
+import com.doumiao.joke.enums.Account;
 import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.Plat;
+import com.doumiao.joke.enums.WealthType;
 import com.doumiao.joke.lang.Function;
 import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.MemberService;
@@ -132,12 +134,15 @@ public class AlipayCompanyLogin {
 						"select sum(wealth)/100 s, count(1) c from `uc_thirdplat_account_log` where status=? and plat=?",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 
-		int payed = jdbcTemplate.queryForInt(
-				"select sum(total)/100 from `uc_thirdplat_account` where plat=?",
-				Plat.ALIPAY.name());
+		int payed = jdbcTemplate
+				.queryForInt(
+						"select sum(total)/100 from `uc_thirdplat_account` where plat=?",
+						Plat.ALIPAY.name());
 
-		Map<String, Object>  day= jdbcTemplate
-				.queryForMap("select count(distinct member_id) m,count(1) c,sum(wealth)/100*1.1 s from `uc_account_log` where to_days(create_time)=to_days(now())");
+		Map<String, Object> day = jdbcTemplate
+				.queryForMap(
+						"select count(distinct member_id) m,count(1) c,sum(wealth)/100*1.1 s from `uc_account_log` where account = ? and wealth_type = ? and to_days(create_time)=to_days(now())",
+						Account.S2.name(), WealthType.DRAW.name());
 
 		List<Map<String, Object>> logs = jdbcTemplate
 				.queryForList(
