@@ -149,6 +149,8 @@ public class AccountService {
 	 * @param logId
 	 * @throws Exception
 	 */
+	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
+	"Exception" }, propagation = Propagation.REQUIRED)
 	public synchronized void reject(AccountLog ll, int logId) throws Exception {
 		jdbcTemplate.update(
 				"update uc_thirdplat_account_log set status = ? where id=?",
@@ -159,6 +161,8 @@ public class AccountService {
 	/**
 	 * 第三方积分打款成功后,修改更新打款状态及支付总额
 	 */
+	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
+	"Exception" }, propagation = Propagation.REQUIRED)
 	public void afterPay(int logId,int wealth,String account,int memberId){
 		// 打款成功或已打过款,更新打款状态
 		jdbcTemplate
