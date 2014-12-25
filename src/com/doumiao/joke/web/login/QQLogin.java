@@ -92,8 +92,8 @@ public class QQLogin {
 			try {
 				int memberId = jdbcTemplate
 						.queryForInt(
-								"SELECT member_id as id FROM uc_thirdplat_binding  WHERE plat=? and open_id=? and token=?",
-								Plat.QQ.toString(), openId, token);
+								"SELECT member_id as id FROM uc_thirdplat_binding  WHERE plat=? and open_id=?",
+								Plat.QQ.toString(), openId);
 				u.setId(memberId);
 			} catch (EmptyResultDataAccessException erdae) {
 				// 用户不存在则注册

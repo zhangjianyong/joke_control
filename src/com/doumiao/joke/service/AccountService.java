@@ -1,6 +1,8 @@
 package com.doumiao.joke.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
@@ -172,5 +174,73 @@ public class AccountService {
 		jdbcTemplate
 				.update("update uc_thirdplat_account set total = total + ?, account = ? where member_id = ? and plat = ?",
 						wealth, account, memberId,Plat.ALIPAY.name());
+	}
+	
+	/**
+	 * qq平台的重复账户处理
+	 */
+	@SuppressWarnings("unchecked")
+	@Transactional(timeout = 100000, rollbackForClassName = { "RuntimeException",
+	"Exception" }, propagation = Propagation.REQUIRED)
+	public void dupQQ(){
+		List<String> openids = jdbcTemplate
+				.queryForList(
+						"SELECT open_id FROM joke.uc_thirdplat_binding u GROUP BY open_id HAVING count(*) > 1",
+						String.class);
+		if (openids != null && openids.size() > 0) {
+			for (String id : openids) {
+				List<Integer> mids = jdbcTemplate
+						.queryForList(
+								"SELECT member_id FROM joke.uc_thirdplat_binding u where open_id = ? and plat = ?",
+								new Object[] { id, Plat.QQ.name() }, Integer.class);
+				if (mids != null && mids.size() > 1) {
+					Integer l_mid = null;
+					Map<Integer, Map<String, Object>> accounts = new HashMap<Integer, Map<String, Object>>(
+							mids.size());
+					for (Integer mid : mids) {
+						Map<String, Object> account = jdbcTemplate.queryForMap(
+								"select * from uc_account where member_id = ?",
+								mid);
+						accounts.put(mid, account);
+						if (l_mid == null || mid < l_mid) {
+							l_mid = mid;
+						}
+					}
+					int s1 = 0;
+					int s2 = 0;
+					for (Map<String, Object> account : accounts.values()) {
+						s1 += (Integer) account.get("s1");
+						s2 += (Integer) account.get("s2");
+					}
+
+					for (Integer mid : mids) {
+						if (mid != l_mid) {
+							jdbcTemplate
+									.update("update uc_account_log set member_id = ? where member_id = ?",
+											l_mid, mid);
+							jdbcTemplate
+									.update("update uc_thirdplat_account_log set member_id = ? where member_id = ?",
+											l_mid, mid);
+							jdbcTemplate
+									.update("delete from uc_thirdplat_account where member_id = ?",
+											mid);
+							jdbcTemplate.update(
+									"delete from uc_account where member_id = ?",
+									mid);
+							jdbcTemplate
+									.update("delete from uc_member where id = ?",
+											mid);
+							jdbcTemplate
+									.update("delete from uc_thirdplat_binding where member_id = ?",
+											mid);
+						}
+					}
+
+					jdbcTemplate
+							.update("update uc_account set s1 = ?,s2 = ? where member_id = ?",
+									s1, s2, l_mid);
+				}
+			}
+		}
 	}
 }
