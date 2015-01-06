@@ -1,6 +1,8 @@
 package com.doumiao.joke.web;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
 
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
@@ -18,11 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import sun.misc.BASE64Encoder;
-
 import com.doumiao.joke.vo.Result;
 import com.google.code.kaptcha.Producer;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 @Controller
 /**
@@ -50,13 +49,11 @@ public class IdentifyCode {
 					.update("insert uc_identify_code(k,c) values (?,?) on duplicate key update c = ?",
 							key, capText, capText);
 			BufferedImage bi = captchaProducer.createImage(capText);
-			ByteOutputStream out = new ByteOutputStream();
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(bi, "jpg", out);
-			String content = BASE64Encoder.class.newInstance().encode(
-					out.getBytes());
+			String content = Base64.getEncoder().encodeToString(out.toByteArray());
 			out.flush();
-			return new Result(true, key, "",
-					"data:image/jpg;base64," + content);
+			return new Result(true, key, "", "data:image/jpg;base64," + content);
 
 		} catch (Exception e) {
 			log.error(e, e);
@@ -84,7 +81,7 @@ public class IdentifyCode {
 			return new Result(false, "faild", "系统错误", null);
 		}
 		if (capText == null || !StringUtils.equals(capText, code)) {
-			log.warn("identify code check faild:"+code+"("+capText+")");
+			log.warn("identify code check faild:" + code + "(" + capText + ")");
 			return new Result(false, "faild", "验证码错误", null);
 		}
 		return new Result(true, "success", "验证通过", null);

@@ -1,6 +1,5 @@
 package com.doumiao.joke.coder;
 
-import java.io.IOException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -14,11 +13,9 @@ import java.security.interfaces.DSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 public abstract class RSA {
 	public static final String ALGORITHM = "RSA";
@@ -40,14 +37,14 @@ public abstract class RSA {
 		DSAPrivateKey privateKey = (DSAPrivateKey) keys.getPrivate();
 
 		System.out.println("publickey:"
-				+ (new BASE64Encoder()).encodeBuffer(publicKey.getEncoded()));
+				+ Base64.getEncoder().encode(publicKey.getEncoded()));
 		System.out.println("privatekey:"
-				+ (new BASE64Encoder()).encodeBuffer(privateKey.getEncoded()));
+				+ Base64.getEncoder().encode(privateKey.getEncoded()));
 	}
 
 	@Deprecated
 	public static byte[] encrypt(byte[] data, String pri) throws Exception {
-		byte[] prikeyBytes = (new BASE64Decoder()).decodeBuffer(pri);
+		byte[] prikeyBytes = Base64.getDecoder().decode(pri);
 		PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(prikeyBytes);
 		KeyFactory prikeyFactory = KeyFactory.getInstance(ALGORITHM);
 		Key privateKey = prikeyFactory.generatePrivate(pkcs8KeySpec);
@@ -58,7 +55,7 @@ public abstract class RSA {
 
 	@Deprecated
 	public static byte[] decrypt(byte[] data, String pub) throws Exception {
-		byte[] keyBytes = (new BASE64Decoder()).decodeBuffer(pub);
+		byte[] keyBytes = Base64.getDecoder().decode(pub);
 		X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(keyBytes);
 		KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
 		PublicKey publicKey = keyFactory.generatePublic(pubKeySpec);
@@ -76,13 +73,11 @@ public abstract class RSA {
 	 */
 	public static PrivateKey initPrivateKey(String priStr) {
 		try {
-			byte[] prikeyBytes = (new BASE64Decoder()).decodeBuffer(priStr);
+			byte[] prikeyBytes = Base64.getDecoder().decode(priStr);
 			PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(
 					prikeyBytes);
 			KeyFactory prikeyFactory = KeyFactory.getInstance(ALGORITHM);
 			return prikeyFactory.generatePrivate(pkcs8KeySpec);
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (InvalidKeySpecException e) {
@@ -100,12 +95,10 @@ public abstract class RSA {
 	 */
 	public static PublicKey initPublicKey(String pubStr) {
 		try {
-			byte[] keyBytes = (new BASE64Decoder()).decodeBuffer(pubStr);
+			byte[] keyBytes = Base64.getDecoder().decode(pubStr);
 			X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(keyBytes);
 			KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
 			return keyFactory.generatePublic(pubKeySpec);
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (InvalidKeySpecException e) {
