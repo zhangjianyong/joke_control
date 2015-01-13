@@ -43,7 +43,7 @@ public class AlipayPoint {
 		AlipayPointOrderAddRequest req = new AlipayPointOrderAddRequest();
 		List<Map<String, Object>> logs = jdbcTemplate
 				.queryForList(
-						"select * from uc_thirdplat_account_log where status=? and plat=?",
+						"select * from uc_thirdplat_account_log where status=? and plat=? order by create_time asc",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 		for (Map<String, Object> l : logs) {
 			long start = System.currentTimeMillis();
