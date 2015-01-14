@@ -43,7 +43,7 @@ public class AlipayPoint {
 		AlipayPointOrderAddRequest req = new AlipayPointOrderAddRequest();
 		List<Map<String, Object>> logs = jdbcTemplate
 				.queryForList(
-						"select * from uc_thirdplat_account_log where status=? and plat=? order by create_time asc",
+						"select * from uc_thirdplat_account_log where `status`=? and plat=? order by create_time asc",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 		for (Map<String, Object> l : logs) {
 			long start = System.currentTimeMillis();
@@ -75,18 +75,21 @@ public class AlipayPoint {
 
 				AlipayPointOrderAddResponse response = client.execute(req,
 						Config.get("alipay_company_token"));
+				String subCode = response.getSubCode();
 				if (response.isSuccess()
-						|| "isv.out-biz-no-exist" == response.getErrorCode()) {
+						|| "isv.out_biz_no_exist".equals(subCode)) {
 					accountService.afterPay(id, wealth, account, memberId);
-				} else if (response.getSubCode().equals("isp.no_exist_user")) {
+				} else if ("isp.no_exist_user".equals(subCode)) {
 					ll.setRemark("第三方账号不存在(" + account + ")");
 					accountService.reject(ll, id);
-				} else if (response.getSubCode().equals("isp.cif_card_freeze")) {
+				} else if ("isp.cif_card_freeze".equals(subCode)) {
 					ll.setRemark("第三方账号被冻结(" + account + ")");
 					accountService.reject(ll, id);
-				} else if (response.getSubCode().equals(
-						"isp.budgetcore_invoke_error")) {
+				} else if ("isp.budgetcore_invoke_error".equals(subCode)||"aop.invalid-auth-token".equals(subCode)) {
+					log.error("alipay point break");
 					break;
+				}else {
+					log.error(sn+":"+response.getSubCode());
 				}
 
 				log.debug("point:" + (System.currentTimeMillis() - start));

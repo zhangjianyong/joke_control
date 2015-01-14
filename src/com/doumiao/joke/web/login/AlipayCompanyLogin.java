@@ -131,7 +131,7 @@ public class AlipayCompanyLogin {
 
 		Map<String, Object> info = jdbcTemplate
 				.queryForMap(
-						"select sum(wealth)/100 s, count(1) c from `uc_thirdplat_account_log` where status=? and plat=?",
+						"select sum(wealth)/100 s, count(1) c from `uc_thirdplat_account_log` where `status`=? and plat=?",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 
 		int payed = jdbcTemplate
@@ -146,7 +146,7 @@ public class AlipayCompanyLogin {
 
 		List<Map<String, Object>> logs = jdbcTemplate
 				.queryForList(
-						"select * from `uc_thirdplat_account_log` where status=? and plat=? order by create_time asc",
+						"select * from `uc_thirdplat_account_log` where `status`=? and plat=? order by create_time asc",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 
 		request.setAttribute("info", info);
