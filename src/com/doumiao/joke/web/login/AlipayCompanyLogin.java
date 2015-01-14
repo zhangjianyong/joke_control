@@ -144,14 +144,14 @@ public class AlipayCompanyLogin {
 						"select count(distinct member_id) m,count(1) c,sum(wealth)/100*1.1 s from `uc_account_log` where account = ? and wealth_type = ? and to_days(create_time)=to_days(now())",
 						Account.S2.name(), WealthType.DRAW.name());
 
-		List<Map<String, Object>> logs = jdbcTemplate
+		/*List<Map<String, Object>> logs = jdbcTemplate
 				.queryForList(
 						"select * from `uc_thirdplat_account_log` where status=? and plat=? order by create_time desc",
-						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
+						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());*/
 
 		request.setAttribute("info", info);
 		request.setAttribute("payed", payed);
-		request.setAttribute("logs", logs);
+		/*request.setAttribute("logs", logs);*/
 		request.setAttribute("day", day);
 		return "/alipay_company_view";
 	}
