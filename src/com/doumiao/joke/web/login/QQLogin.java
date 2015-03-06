@@ -25,6 +25,7 @@ import com.doumiao.joke.lang.CookieUtils;
 import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.MemberService;
 import com.doumiao.joke.vo.Member;
+import com.doumiao.joke.vo.Result;
 import com.qq.connect.api.OpenID;
 import com.qq.connect.api.qzone.UserInfo;
 import com.qq.connect.javabeans.AccessToken;
@@ -84,6 +85,7 @@ public class QQLogin {
 			userInfoBean = qzoneUserInfo.getUserInfo();
 		} catch (Exception e) {
 			log.error("qq oauth error", e);
+			new Result(false,"qq_oauth_error","qq登录授权错误",null);
 			return "redirect:/error";
 		}
 

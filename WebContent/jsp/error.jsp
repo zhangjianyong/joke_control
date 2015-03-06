@@ -7,6 +7,8 @@
 <body>
 	错误类型:${result.code }<br>
 	错误编码:${result.msg }<br>
-	错误:${result.content }
+	<c:if test="${result.code=='qq_oauth_error' }">
+	<div>请重试:<a href="/qqbind" class="qq">QQ登录</a></div>
+	</c:if>
 </body>
 </html>
