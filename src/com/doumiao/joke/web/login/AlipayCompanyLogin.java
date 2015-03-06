@@ -151,25 +151,23 @@ public class AlipayCompanyLogin {
 						"select sum(wealth)/100 s, count(1) c from `uc_thirdplat_account_log` where `status`=? and plat=?",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 
-		int payed = jdbcTemplate
+		/*int payed = jdbcTemplate
 				.queryForInt(
 						"select sum(total)/100 from `uc_thirdplat_account` where plat=?",
-						Plat.ALIPAY.name());
+						Plat.ALIPAY.name());*/
 
-		Map<String, Object> day = jdbcTemplate
+		/*Map<String, Object> day = jdbcTemplate
 				.queryForMap(
 						"select count(distinct member_id) m,count(1) c,sum(wealth)/100*1.1 s from `uc_account_log` where account = ? and wealth_type = ? and to_days(create_time)=to_days(now())",
-						Account.S2.name(), WealthType.DRAW.name());
+						Account.S2.name(), WealthType.DRAW.name());*/
 
 		List<Map<String, Object>> logs = jdbcTemplate
 				.queryForList(
-						"select * from `uc_thirdplat_account_log` where `status`=? and plat=? order by create_time asc",
+						"select * from `uc_thirdplat_account_log` where `status`=? and plat=? order by create_time asc limit 0, 1000",
 						AccountLogStatus.UNPAY.name(), Plat.ALIPAY.name());
 
 		request.setAttribute("info", info);
-		request.setAttribute("payed", payed);
 		request.setAttribute("logs", logs);
-		request.setAttribute("day", day);
 		return "/alipay_company_view";
 	}
 }
