@@ -58,16 +58,16 @@ public class AlipayCompanyLogin {
 			String url = "https://openauth.alipay.com/oauth2/authorize.htm";
 			List<String[]> params = new ArrayList<String[]>();
 			params.add(new String[] { "client_id",
-					Config.get("alipay_company_appid") });// String|æ˜¯|å®¢æˆ·ç«¯æ ‡è¯†ç¬¦,
-			// ç­‰åŒä¸appkey
+					Config.get("alipay_company_appid") });// String|ÊÇ|¿Í»§¶Ë±êÊ¶·û,
+			// µÈÍ¬Óëappkey
 			// params.add(new String[] { "redirect_uri",
 			// "http://control.yixiaoqianjin.com/alipay_company_callback" });//
-			// String|å¦|urlæˆæƒçš„å›è°ƒåœ°å€,ä¸ºç©ºæ—¶ç”¨åº”ç”¨çš„callback_url
-			params.add(new String[] { "scope", "p" });// String|å¦|ç©ºæˆ–è€…p|è®¿é—®è¯·æ±‚çš„ä½œç”¨åŸŸï¼Œéœ€è¦æ”¯ä»˜æˆæƒæ—¶ä¼ p
+			// String|·ñ|urlÊÚÈ¨µÄ»Øµ÷µØÖ·,Îª¿ÕÊ±ÓÃÓ¦ÓÃµÄcallback_url
+			params.add(new String[] { "scope", "p" });// String|·ñ|¿Õ»òÕßp|·ÃÎÊÇëÇóµÄ×÷ÓÃÓò£¬ĞèÒªÖ§¸¶ÊÚÈ¨Ê±´«p
 			// params.add(new String[] { "state", "" });//
-			// String|å¦|ç»´æŒåº”ç”¨çš„çŠ¶æ€ï¼Œæ­¤å‚æ•°æˆæƒæˆåŠŸåä¼šåŸæ ·å¸¦å›.
+			// String|·ñ|Î¬³ÖÓ¦ÓÃµÄ×´Ì¬£¬´Ë²ÎÊıÊÚÈ¨³É¹¦ºó»áÔ­Ñù´ø»Ø.
 			// params.add(new String[] { "view", "" });//
-			// String|å¦|ç©ºæˆ–è€…wap|æˆæƒé¡µé¢çš„è§†å›¾ç±»å‹,PCä¸Šä½¿ç”¨æ—¶ä¼ ç©º,wapç‰ˆæœ¬æˆæƒæ—¶ä¼ å…¥wap.
+			// String|·ñ|¿Õ»òÕßwap|ÊÚÈ¨Ò³ÃæµÄÊÓÍ¼ÀàĞÍ,PCÉÏÊ¹ÓÃÊ±´«¿Õ,wap°æ±¾ÊÚÈ¨Ê±´«Èëwap.
 			url = Function.joinUrl(url, params);
 			return "redirect:" + url;
 		} catch (Exception e) {
@@ -112,19 +112,36 @@ public class AlipayCompanyLogin {
 		AlipayClient client = new DefaultAlipayClient(Config.get("alipay_url"),
 				Config.get("alipay_company_appid"),
 				Config.get("alipay_company_private_key"), "json");
-		AlipayPointBalanceGetRequest req = new AlipayPointBalanceGetRequest();
-		AlipayPointBalanceGetResponse res = client.execute(req,
-				Config.get("alipay_company_token"));
-		request.setAttribute("pointAmount", res.getPointAmount());
-		AlipayPointBudgetGetRequest reqb = new AlipayPointBudgetGetRequest();
-		AlipayPointBudgetGetResponse resb = client.execute(reqb,
-				Config.get("alipay_company_token"));
-
-		if (!resb.isSuccess()
-				&& resb.getSubCode().equals("aop.invalid-auth-token")) {
-			return "redirect:/alipay_company_login";
-		} else {
-			request.setAttribute("error", resb.getSubMsg());
+		AlipayPointBudgetGetRequest reqb = null;
+		AlipayPointBudgetGetResponse resb = null;
+		try {
+			AlipayPointBalanceGetRequest req = new AlipayPointBalanceGetRequest();
+			log.debug("get alipay point start");
+			AlipayPointBalanceGetResponse res = client.execute(req,
+					Config.get("alipay_company_token"));
+			request.setAttribute("pointAmount", res.getPointAmount());
+			reqb = new AlipayPointBudgetGetRequest();
+			
+			resb = client.execute(reqb, Config.get("alipay_company_token"));
+			log.debug("get alipay point end");
+			if (!resb.isSuccess()) {
+				if (resb.getSubCode().equals("aop.invalid-auth-token")) {
+					return "redirect:/alipay_company_login";
+				} else {
+					request.setAttribute(
+							"result",
+							new Result(false, resb.getSubCode(), resb
+									.getSubMsg(), null));
+					return "/error";
+				}
+			}
+		} catch (Exception e) {
+			log.error(e, e);
+			request.setAttribute(
+					"result",
+					new Result(false, "faild", e.getMessage(), e
+							.getStackTrace()));
+			return "/error";
 		}
 		request.setAttribute("budgetAmount", resb.getBudgetAmount());
 		request.setAttribute("config", Config.getConfig());
