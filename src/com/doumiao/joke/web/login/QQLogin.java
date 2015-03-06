@@ -85,7 +85,7 @@ public class QQLogin {
 			userInfoBean = qzoneUserInfo.getUserInfo();
 		} catch (Exception e) {
 			log.error("qq oauth error", e);
-			new Result(false,"qq_oauth_error","qq登录授权错误",null);
+			request.setAttribute("result", new Result(false,"qq_oauth_error","qq登录授权错误",null));
 			return "redirect:/error";
 		}
 
