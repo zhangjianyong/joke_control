@@ -116,14 +116,12 @@ public class AlipayCompanyLogin {
 		AlipayPointBudgetGetResponse resb = null;
 		try {
 			AlipayPointBalanceGetRequest req = new AlipayPointBalanceGetRequest();
-			log.debug("get alipay point start");
 			AlipayPointBalanceGetResponse res = client.execute(req,
 					Config.get("alipay_company_token"));
 			request.setAttribute("pointAmount", res.getPointAmount());
 			reqb = new AlipayPointBudgetGetRequest();
 			
 			resb = client.execute(reqb, Config.get("alipay_company_token"));
-			log.debug("get alipay point end");
 			if (!resb.isSuccess()) {
 				if (resb.getSubCode().equals("aop.invalid-auth-token")) {
 					return "redirect:/alipay_company_login";

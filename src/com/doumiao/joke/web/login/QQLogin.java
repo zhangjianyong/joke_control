@@ -82,45 +82,48 @@ public class QQLogin {
 			openId = new OpenID(token).getUserOpenID();
 			UserInfo qzoneUserInfo = new UserInfo(token, openId);
 			userInfoBean = qzoneUserInfo.getUserInfo();
-			// 查看该QQ是否绑定过平台账号
-			Map<String, String> params = new HashMap<String, String>(3);
-			params.put("openId", openId);
-			params.put("token", token);
-			// 用户存在登录,不存在注册
-			Member u = new Member();
-			u.setNick(userInfoBean.getNickname());
-			try {
-				int memberId = jdbcTemplate
-						.queryForInt(
-								"SELECT member_id as id FROM uc_thirdplat_binding  WHERE plat=? and open_id=?",
-								Plat.QQ.toString(), openId);
-				u.setId(memberId);
-			} catch (EmptyResultDataAccessException erdae) {
-				// 用户不存在则注册
-				u = memberService.bindThirdPlat(u, Plat.QQ, openId, token,
-						params);
-			}
+		} catch (Exception e) {
+			log.error("qq oauth error", e);
+			return "redirect:/error";
+		}
 
-			String domain = Config.get("cookie_domain", "");
-			String key = Config.get("system_cookie_key", "");
-			String charset = Config.get("system_charset", "utf-8");
-			Map<String, Object> loginCookie = new HashMap<String, Object>(2);
-			int ctime = Config.getInt("cookie_time", 1);
-			loginCookie.put("id", u.getId());
-			loginCookie.put("nick", URLEncoder.encode(u.getNick(), "UTF-8"));
-			String userJson = objectMapper.writeValueAsString(loginCookie);
-			CookieUtils.createCookie(response, domain, "user", userJson, "/",
-					Integer.MAX_VALUE, false);
+		// 查看该QQ是否绑定过平台账号
+		Map<String, String> params = new HashMap<String, String>(3);
+		params.put("openId", openId);
+		params.put("token", token);
+		// 用户存在登录,不存在注册
+		Member u = new Member();
+		u.setNick(userInfoBean.getNickname());
+		try {
+			int memberId = jdbcTemplate
+					.queryForInt(
+							"SELECT member_id as id FROM uc_thirdplat_binding  WHERE plat=? and open_id=?",
+							Plat.QQ.toString(), openId);
+			u.setId(memberId);
+		} catch (EmptyResultDataAccessException erdae) {
+			// 用户不存在则注册
+			u = memberService.bindThirdPlat(u, Plat.QQ, openId, token, params);
+		}
 
+		String domain = Config.get("cookie_domain", "");
+		String key = Config.get("system_cookie_key", "");
+		String charset = Config.get("system_charset", "utf-8");
+		Map<String, Object> loginCookie = new HashMap<String, Object>(2);
+		int ctime = Config.getInt("cookie_time", 1);
+		loginCookie.put("id", u.getId());
+		loginCookie.put("nick", URLEncoder.encode(u.getNick(), "UTF-8"));
+		String userJson = objectMapper.writeValueAsString(loginCookie);
+		CookieUtils.createCookie(response, domain, "user", userJson, "/",
+				Integer.MAX_VALUE, false);
+		try {
 			byte[] des = DESCoder.encrypt(userJson.getBytes(charset),
 					key.getBytes(charset));
 			byte[] loginuser = DESCoder.encryptBASE64(des);
 			CookieUtils.createCookie(response, domain, "_user", new String(
 					loginuser, charset), "/", ctime * 60 * 60, false);
-
 			return "redirect:" + target;
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error(e, e);
 			return "redirect:/error";
 		}
 	}
