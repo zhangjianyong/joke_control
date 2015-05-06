@@ -26,6 +26,7 @@ import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.MemberService;
 import com.doumiao.joke.vo.Member;
 import com.doumiao.joke.vo.Result;
+import com.qq.connect.QQConnectException;
 import com.qq.connect.api.OpenID;
 import com.qq.connect.api.qzone.UserInfo;
 import com.qq.connect.javabeans.AccessToken;
@@ -76,19 +77,33 @@ public class QQLogin {
 		}
 		// 取第三方平台的用户信息
 		UserInfoBean userInfoBean = null;
-		try {
-			AccessToken tokenObj = (new Oauth())
-					.getAccessTokenByRequest(request);
-			token = tokenObj.getAccessToken();
-			openId = new OpenID(token).getUserOpenID();
-			UserInfo qzoneUserInfo = new UserInfo(token, openId);
-			userInfoBean = qzoneUserInfo.getUserInfo();
-		} catch (Exception e) {
-			log.error("qq oauth error", e);
-			request.setAttribute("result", new Result(false,"qq_oauth_error","qq登录授权错误",null));
+		int tt = 0;
+		while (tt < 5) {
+			try {
+				AccessToken tokenObj = (new Oauth())
+						.getAccessTokenByRequest(request);
+				token = tokenObj.getAccessToken();
+				openId = new OpenID(token).getUserOpenID();
+				UserInfo qzoneUserInfo = new UserInfo(token, openId);
+				userInfoBean = qzoneUserInfo.getUserInfo();
+				break;
+			} catch (QQConnectException qe) {
+				tt++;
+				if (log.isDebugEnabled()) {
+					log.debug("qq login retry " + tt);
+				}
+			} catch (Exception e) {
+				log.error("qq oauth error", e);
+				request.setAttribute("result", new Result(false,
+						"qq_oauth_faild", "qq登录授权错误", null));
+				return "redirect:/error";
+			}
+		}
+		if (tt >= 5) {
+			request.setAttribute("result", new Result(false, "qq_timeout",
+					"qq登录超时", null));
 			return "redirect:/error";
 		}
-
 		// 查看该QQ是否绑定过平台账号
 		Map<String, String> params = new HashMap<String, String>(3);
 		params.put("openId", openId);
