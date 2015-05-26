@@ -78,7 +78,7 @@ public class QQLogin {
 		// 取第三方平台的用户信息
 		UserInfoBean userInfoBean = null;
 		int tt = 0;
-		while (tt < 5) {
+		while (tt < 10) {
 			try {
 				AccessToken tokenObj = (new Oauth())
 						.getAccessTokenByRequest(request);
@@ -99,7 +99,7 @@ public class QQLogin {
 				return "redirect:/error";
 			}
 		}
-		if (tt >= 5) {
+		if (tt >= 10) {
 			request.setAttribute("result", new Result(false, "qq_timeout",
 					"qq登录超时", null));
 			return "redirect:/error";
