@@ -53,10 +53,10 @@ public class AccountService {
 			// 组装并验证数据合法性
 			AccountLog log = new AccountLog();
 			log.setMemberId((Integer) l.get("u"));
-			log.setAccount((Account)l.get("a"));
-			log.setWealthType((WealthType)l.get("t"));
+			log.setAccount(Account.valueOf((String) l.get("a")));
+			log.setWealthType(WealthType.valueOf((String) l.get("t")));
 			log.setWealth((Integer) l.get("w"));
-			log.setStatus((AccountLogStatus) l.get("s"));
+			log.setStatus(AccountLogStatus.valueOf((String) l.get("s")));
 			log.setSerialNumber(sn[0]);
 			log.setSubSerialNmumber(sn[i + 1]);
 			log.setRemark(StringUtils.defaultIfBlank((String) l.get("r"), null));

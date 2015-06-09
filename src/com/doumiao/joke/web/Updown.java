@@ -115,10 +115,10 @@ public class Updown {
 			List<Map<String, Object>> ls = new ArrayList<Map<String, Object>>(2);
 			Map<String, Object> l = new HashMap<String, Object>(1);
 			l.put("u", uid);
-			l.put("a", Account.S1);
-			l.put("t", WealthType.UPDOWN);
+			l.put("a", Account.S1.name());
+			l.put("t", WealthType.UPDOWN.name());
 			l.put("w", scoreUpDownPerTime);
-			l.put("s", AccountLogStatus.PAYED);
+			l.put("s", AccountLogStatus.PAYED.name());
 			l.put("r", "");
 			l.put("o", "system");
 			ls.add(l);
