@@ -8,6 +8,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.doumiao.joke.web.Updown;
+
 @Component
 public class DeleteUpDownLog {
 	private static final Log log = LogFactory.getLog(DeleteUpDownLog.class);
@@ -15,11 +17,12 @@ public class DeleteUpDownLog {
 	@Resource
 	private JdbcTemplate jdbcTemplate;
 
-	@Scheduled(cron="0 0 0 ? * *")
+	@Scheduled(cron = "0 0 0 ? * *")
 	public void list() {
 		jdbcTemplate.execute("truncate table joke_article_updown");
 		jdbcTemplate.execute("update uc_account set s1=0 where s1>0");
-		if(log.isInfoEnabled()){
+		Updown.clearUserUpDown();
+		if (log.isInfoEnabled()) {
 			log.info("truncate table joke_article_updown");
 		}
 	}

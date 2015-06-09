@@ -1,11 +1,14 @@
 package com.doumiao.joke.service;
 
+import java.sql.Date;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,8 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.doumiao.joke.enums.Account;
 import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.Plat;
+import com.doumiao.joke.enums.WealthType;
+import com.doumiao.joke.lang.SerialNumberGenerator;
 import com.doumiao.joke.web.DealAccount;
 
 @Service
@@ -34,9 +40,32 @@ public class AccountService {
 	 */
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
 			"Exception" }, propagation = Propagation.REQUIRED)
-	public synchronized void batchPay(List<AccountLog> accountLogs)
+	public synchronized void batchPay(List<Map<String, Object>> accountLogs)
 			throws Exception {
-		for (AccountLog log : accountLogs) {
+		if (accountLogs == null || accountLogs.size() == 0) {
+			return;
+		}
+		int count = accountLogs.size();
+		List<AccountLog> _scoreLogs = new ArrayList<AccountLog>(count);
+		String[] sn = SerialNumberGenerator.generate(accountLogs.size());
+		for (int i = 0; i < count; i++) {
+			Map<String, Object> l = accountLogs.get(i);
+			// 组装并验证数据合法性
+			AccountLog log = new AccountLog();
+			log.setMemberId((Integer) l.get("u"));
+			log.setAccount((Account)l.get("a"));
+			log.setWealthType((WealthType)l.get("t"));
+			log.setWealth((Integer) l.get("w"));
+			log.setStatus((AccountLogStatus) l.get("s"));
+			log.setSerialNumber(sn[0]);
+			log.setSubSerialNmumber(sn[i + 1]);
+			log.setRemark(StringUtils.defaultIfBlank((String) l.get("r"), null));
+			log.setOperator(StringUtils.defaultIfBlank((String) l.get("o"),
+					null));
+			log.setWealthTime((Date) l.get("wt"));
+			_scoreLogs.add(log);
+		}
+		for (AccountLog log : _scoreLogs) {
 			pay(log);
 		}
 	}
@@ -152,37 +181,36 @@ public class AccountService {
 	 * @throws Exception
 	 */
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
-	"Exception" }, propagation = Propagation.REQUIRED)
+			"Exception" }, propagation = Propagation.REQUIRED)
 	public synchronized void reject(AccountLog ll, int logId) throws Exception {
 		jdbcTemplate.update(
 				"update uc_thirdplat_account_log set status = ? where id=?",
 				AccountLogStatus.REJECT.name(), logId);
 		pay(ll);
 	}
-	
+
 	/**
 	 * 第三方积分打款成功后,修改更新打款状态及支付总额
 	 */
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
-	"Exception" }, propagation = Propagation.REQUIRED)
-	public void afterPay(int logId,int wealth,String account,int memberId){
+			"Exception" }, propagation = Propagation.REQUIRED)
+	public void afterPay(int logId, int wealth, String account, int memberId) {
 		// 打款成功或已打过款,更新打款状态
-		jdbcTemplate
-				.update("update uc_thirdplat_account_log set status = ? where id=?",
-						AccountLogStatus.PAYED.name(), logId);
+		jdbcTemplate.update(
+				"update uc_thirdplat_account_log set status = ? where id=?",
+				AccountLogStatus.PAYED.name(), logId);
 		// 打款成功更新最后支付时间及总额
 		jdbcTemplate
 				.update("update uc_thirdplat_account set total = total + ?, account = ? where member_id = ? and plat = ?",
-						wealth, account, memberId,Plat.ALIPAY.name());
+						wealth, account, memberId, Plat.ALIPAY.name());
 	}
-	
+
 	/**
 	 * qq平台的重复账户处理
 	 */
-	@SuppressWarnings("unchecked")
-	@Transactional(timeout = 100000, rollbackForClassName = { "RuntimeException",
-	"Exception" }, propagation = Propagation.REQUIRED)
-	public void dupQQ(){
+	@Transactional(timeout = 100000, rollbackForClassName = {
+			"RuntimeException", "Exception" }, propagation = Propagation.REQUIRED)
+	public void dupQQ() {
 		List<String> openids = jdbcTemplate
 				.queryForList(
 						"SELECT open_id FROM joke.uc_thirdplat_binding u GROUP BY open_id HAVING count(*) > 1",
@@ -192,7 +220,8 @@ public class AccountService {
 				List<Integer> mids = jdbcTemplate
 						.queryForList(
 								"SELECT member_id FROM joke.uc_thirdplat_binding u where open_id = ? and plat = ?",
-								new Object[] { id, Plat.QQ.name() }, Integer.class);
+								new Object[] { id, Plat.QQ.name() },
+								Integer.class);
 				if (mids != null && mids.size() > 1) {
 					Integer l_mid = null;
 					Map<Integer, Map<String, Object>> accounts = new HashMap<Integer, Map<String, Object>>(
@@ -224,12 +253,11 @@ public class AccountService {
 							jdbcTemplate
 									.update("delete from uc_thirdplat_account where member_id = ?",
 											mid);
-							jdbcTemplate.update(
-									"delete from uc_account where member_id = ?",
-									mid);
 							jdbcTemplate
-									.update("delete from uc_member where id = ?",
+									.update("delete from uc_account where member_id = ?",
 											mid);
+							jdbcTemplate.update(
+									"delete from uc_member where id = ?", mid);
 							jdbcTemplate
 									.update("delete from uc_thirdplat_binding where member_id = ?",
 											mid);

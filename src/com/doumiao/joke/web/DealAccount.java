@@ -1,7 +1,5 @@
 package com.doumiao.joke.web;
 
-import java.sql.Date;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +7,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,36 +52,14 @@ public class DealAccount {
 			HttpServletResponse response,
 			@RequestParam(value = "accountLog", required = false) String accountLog) {
 		try {
-			List<AccountLog> _scoreLogs = ListUtils.EMPTY_LIST;
-			if (StringUtils.isNotBlank(accountLog)) {
-				List<Map<String, Object>> accountLogs = objectMapper.readValue(
-						accountLog, List.class);
-				int count = accountLogs.size();
-				_scoreLogs = new ArrayList<AccountLog>(count);
-				String[] sn = SerialNumberGenerator
-						.generate(accountLogs.size());
-				for (int i = 0; i < count; i++) {
-					Map<String, Object> l = accountLogs.get(i);
-					// 组装并验证数据合法性
-					AccountLog log = new AccountLog();
-					log.setMemberId((Integer) l.get("u"));
-					log.setAccount(Account.valueOf((String) l.get("a")));
-					log.setWealthType(WealthType.valueOf((String) l.get("t")));
-					log.setWealth((Integer) l.get("w"));
-					log.setStatus(AccountLogStatus.valueOf((String) l.get("s")));
-					log.setSerialNumber(sn[0]);
-					log.setSubSerialNmumber(sn[i + 1]);
-					log.setRemark(StringUtils.defaultIfBlank(
-							(String) l.get("r"), null));
-					log.setOperator(StringUtils.defaultIfBlank(
-							(String) l.get("o"), null));
-					log.setWealthTime((Date) l.get("wt"));
-					_scoreLogs.add(log);
-				}
+			if (StringUtils.isBlank(accountLog)) {
+				return new Result(false, "param.error", "参数错误", null);
 			}
+			List<Map<String, Object>> accountLogs = objectMapper.readValue(
+					accountLog, List.class);
 
-			if (_scoreLogs.size() > 0) {
-				accountService.batchPay(_scoreLogs);
+			if (accountLogs.size() > 0) {
+				accountService.batchPay(accountLogs);
 			} else {
 				return new Result(false, "param.error", "系统错误", null);
 			}

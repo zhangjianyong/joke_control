@@ -11,7 +11,7 @@ import com.doumiao.joke.lang.SerialNumberGenerator;
 import com.doumiao.joke.vo.Result;
 
 @Controller
-public class SerialNumberController {
+public class SerialNumber {
 
 	@RequestMapping("/sngenerate")
 	public synchronized Result generate(HttpServletRequest request,
