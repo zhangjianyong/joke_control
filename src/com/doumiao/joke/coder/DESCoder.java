@@ -1,6 +1,8 @@
 package com.doumiao.joke.coder;
+import java.nio.charset.Charset;
 import java.security.Key;
 import java.security.SecureRandom;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -26,7 +28,7 @@ import javax.crypto.spec.DESKeySpec;
  * @version 1.0
  * @since 1.0
  */
-public abstract class DESCoder extends Coder {
+public abstract class DESCoder{
 	/**
 	 * ALGORITHM 算法 <br>
 	 * 可替换为以下任意一种算法，同时key值的size相应改变。
@@ -76,13 +78,13 @@ public abstract class DESCoder extends Coder {
 	 * @return
 	 * @throws Exception
 	 */
-	public static byte[] decrypt(byte[] data, byte[] key) throws Exception {
-		Key k = toKey(decryptBASE64(key));
+	public static byte[] decrypt(String data, String key) throws Exception {
+		Key k = toKey(Base64.getDecoder().decode(key));
 
 		Cipher cipher = Cipher.getInstance(ALGORITHM);
 		cipher.init(Cipher.DECRYPT_MODE, k);
 
-		return cipher.doFinal(data);
+		return cipher.doFinal(Base64.getDecoder().decode(data));
 	}
 
 	/**
@@ -93,12 +95,12 @@ public abstract class DESCoder extends Coder {
 	 * @return
 	 * @throws Exception
 	 */
-	public static byte[] encrypt(byte[] data, byte[] key) throws Exception {
-		Key k = toKey(decryptBASE64(key));
+	public static String encrypt(String data, String key, Charset charset) throws Exception {
+		Key k = toKey(Base64.getDecoder().decode(key));
 		Cipher cipher = Cipher.getInstance(ALGORITHM);
 		cipher.init(Cipher.ENCRYPT_MODE, k);
 
-		return cipher.doFinal(data);
+		return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes(charset)));
 	}
 
 	/**
@@ -118,11 +120,11 @@ public abstract class DESCoder extends Coder {
 	 * @return
 	 * @throws Exception
 	 */
-	public static byte[] initKey(byte[] seed) throws Exception {
+	public static byte[] initKey(String seed) throws Exception {
 		SecureRandom secureRandom = null;
 
 		if (seed != null) {
-			secureRandom = new SecureRandom(decryptBASE64(seed));
+			secureRandom = new SecureRandom(Base64.getDecoder().decode(seed));
 		} else {
 			secureRandom = new SecureRandom();
 		}
@@ -132,6 +134,6 @@ public abstract class DESCoder extends Coder {
 
 		SecretKey secretKey = kg.generateKey();
 
-		return encryptBASE64(secretKey.getEncoded());
+		return Base64.getEncoder().encode(secretKey.getEncoded());
 	}
 }

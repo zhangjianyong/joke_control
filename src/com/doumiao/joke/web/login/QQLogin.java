@@ -2,6 +2,7 @@ package com.doumiao.joke.web.login;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,10 +48,8 @@ public class QQLogin {
 	private ObjectMapper objectMapper;
 
 	@RequestMapping("/qqbind")
-	public String bind(HttpServletRequest request,
-			HttpServletResponse response,
-			@RequestParam(value = "t", required = false) String target)
-			throws IOException {
+	public String bind(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(value = "t", required = false) String target) throws IOException {
 		try {
 			String refferer = request.getHeader("Referer");
 			target = target == null ? refferer : target;
@@ -67,8 +66,7 @@ public class QQLogin {
 	}
 
 	@RequestMapping("/qqbindafter")
-	public String bindAfter(HttpServletRequest request,
-			HttpServletResponse response) throws IOException {
+	public String bindAfter(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String openId = null, token = null;
 		// 查取登录成功后的目标地址
 		String target = (String) request.getSession().getAttribute("qq_target");
@@ -80,8 +78,7 @@ public class QQLogin {
 		int tt = 0;
 		while (tt < 10) {
 			try {
-				AccessToken tokenObj = (new Oauth())
-						.getAccessTokenByRequest(request);
+				AccessToken tokenObj = (new Oauth()).getAccessTokenByRequest(request);
 				token = tokenObj.getAccessToken();
 				openId = new OpenID(token).getUserOpenID();
 				UserInfo qzoneUserInfo = new UserInfo(token, openId);
@@ -94,14 +91,12 @@ public class QQLogin {
 				}
 			} catch (Exception e) {
 				log.error("qq oauth error", e);
-				request.setAttribute("result", new Result(false,
-						"qq_oauth_faild", "qq登录授权错误", null));
+				request.setAttribute("result", new Result(false, "qq_oauth_faild", "qq登录授权错误", null));
 				return "redirect:/error";
 			}
 		}
 		if (tt >= 10) {
-			request.setAttribute("result", new Result(false, "qq_timeout",
-					"qq登录超时", null));
+			request.setAttribute("result", new Result(false, "qq_timeout", "qq登录超时", null));
 			return "redirect:/error";
 		}
 		// 查看该QQ是否绑定过平台账号
@@ -112,10 +107,9 @@ public class QQLogin {
 		Member u = new Member();
 		u.setNick(userInfoBean.getNickname());
 		try {
-			int memberId = jdbcTemplate
-					.queryForInt(
-							"SELECT member_id as id FROM uc_thirdplat_binding  WHERE plat=? and open_id=?",
-							Plat.QQ.toString(), openId);
+			int memberId = jdbcTemplate.queryForInt(
+					"SELECT member_id as id FROM uc_thirdplat_binding  WHERE plat=? and open_id=?", Plat.QQ.toString(),
+					openId);
 			u.setId(memberId);
 		} catch (EmptyResultDataAccessException erdae) {
 			// 用户不存在则注册
@@ -130,14 +124,10 @@ public class QQLogin {
 		loginCookie.put("id", u.getId());
 		loginCookie.put("nick", URLEncoder.encode(u.getNick(), "UTF-8"));
 		String userJson = objectMapper.writeValueAsString(loginCookie);
-		CookieUtils.createCookie(response, domain, "user", userJson, "/",
-				Integer.MAX_VALUE, false);
+		CookieUtils.createCookie(response, domain, "user", userJson, "/", Integer.MAX_VALUE, false);
 		try {
-			byte[] des = DESCoder.encrypt(userJson.getBytes(charset),
-					key.getBytes(charset));
-			byte[] loginuser = DESCoder.encryptBASE64(des);
-			CookieUtils.createCookie(response, domain, "_user", new String(
-					loginuser, charset), "/", ctime * 60 * 60, false);
+			String des = DESCoder.encrypt(userJson, key, Charset.forName(charset));
+			CookieUtils.createCookie(response, domain, "_user", des, "/", ctime * 60 * 60, false);
 			return "redirect:" + target;
 		} catch (Exception e) {
 			log.error(e, e);
