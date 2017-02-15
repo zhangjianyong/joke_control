@@ -23,6 +23,11 @@ public class MemberService {
 
 	@Resource
 	private JdbcTemplate jdbcTemplate;
+	
+	public Member findById(int uid){
+		Member u = jdbcTemplate.queryForObject("select * from uc_mebmer where id = ?", Member.class, uid);
+		return u;
+	}
 
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
 			"Exception" }, propagation = Propagation.REQUIRED)

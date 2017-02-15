@@ -29,6 +29,8 @@ import com.doumiao.joke.enums.AccountLogStatus;
 import com.doumiao.joke.enums.WealthType;
 import com.doumiao.joke.schedule.Config;
 import com.doumiao.joke.service.AccountService;
+import com.doumiao.joke.service.MemberService;
+import com.doumiao.joke.vo.Member;
 import com.doumiao.joke.vo.Result;
 
 @Controller
@@ -45,6 +47,10 @@ public class Updown {
 
 	@Resource
 	private AccountService accountService;
+	
+	@Resource
+	private MemberService memberService;
+	
 
 	@ResponseBody
 	@RequestMapping(value = "/updown", method = RequestMethod.POST)
@@ -52,6 +58,16 @@ public class Updown {
 			@RequestParam(value = "type") String type,
 			@RequestParam(value = "articleId") int articleId,
 			@RequestParam(value = "uid") int uid) {
+		
+		Member u = memberService.findById(uid);
+		if(u==null){
+			log.error("opertion is not up or donw");
+			return new Result(false, "faild", "用户不存在", "");
+		}
+		if(u.getStatus()==1){
+			log.error("opertion is not up or donw");
+			return new Result(false, "faild", u.getRemark(), "");
+		}
 		String _type = type.toLowerCase();
 		if (!_type.equals("down") && !_type.equals("up")) {
 			log.error("opertion is not up or donw");
