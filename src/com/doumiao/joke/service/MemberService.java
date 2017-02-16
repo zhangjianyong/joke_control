@@ -37,7 +37,7 @@ public class MemberService {
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",
 			"Exception" }, propagation = Propagation.REQUIRED)
 	public Member createMember(final Member u) {
-		final String sql = "insert into uc_member(name, nick, email, mobile, password, status, remark) VALUES(?,?,?,?,?,?,?)";
+		final String sql = "insert into uc_member(name, nick, email, mobile, password, status, remark, create_time) VALUES(?,?,?,?,?,?,?,now())";
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 		jdbcTemplate.update(new PreparedStatementCreator() {
 			@Override
