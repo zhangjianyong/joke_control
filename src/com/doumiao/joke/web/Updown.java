@@ -65,7 +65,7 @@ public class Updown {
 			return new Result(false, "faild", "用户不存在", "");
 		}
 		if(u.getStatus()==1){
-			log.error("user freezen");
+			log.error("user freezen:"+uid);
 			return new Result(false, "faild", u.getRemark(), "");
 		}
 		String _type = type.toLowerCase();
