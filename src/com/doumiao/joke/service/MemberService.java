@@ -3,10 +3,12 @@ package com.doumiao.joke.service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -25,8 +27,11 @@ public class MemberService {
 	private JdbcTemplate jdbcTemplate;
 	
 	public Member findById(int uid){
-		Member u = jdbcTemplate.queryForObject("select * from uc_mebmer where id = ?", Member.class, uid);
-		return u;
+		List<Member> userList = jdbcTemplate.query("select * from uc_member where id = ?", new Object[]{uid}, new BeanPropertyRowMapper<Member>(Member.class));
+        if(null!=userList&&userList.size()>0){
+        	return userList.get(0);
+        }
+        return null;
 	}
 
 	@Transactional(timeout = 1000, rollbackForClassName = { "RuntimeException",

@@ -61,11 +61,11 @@ public class Updown {
 		
 		Member u = memberService.findById(uid);
 		if(u==null){
-			log.error("opertion is not up or donw");
+			log.error("user is not exist:"+uid);
 			return new Result(false, "faild", "用户不存在", "");
 		}
 		if(u.getStatus()==1){
-			log.error("opertion is not up or donw");
+			log.error("user freezen");
 			return new Result(false, "faild", u.getRemark(), "");
 		}
 		String _type = type.toLowerCase();
