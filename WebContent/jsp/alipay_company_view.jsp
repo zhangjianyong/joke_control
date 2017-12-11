@@ -15,6 +15,7 @@
 	已发放的集分宝:${payed }元<br>
 	未发放的集分宝:${info.s }元&nbsp;&nbsp;未发放笔数:${info.c }笔&nbsp;&nbsp;<a href="/alipaypoint" target="_blank">发放</a><br>
 	今日签到人数:${day.m }&nbsp;&nbsp;今日签到次数:${day.c }&nbsp;&nbsp;今日签到成本:${day.s }<br>
+	<a href="http://apifront.bigou.cn/update_alipay_token.htm?token=${config.alipay_company_token }&second=${config.alipay_company_expires }" target="_blank">发放优惠积分</a>
 	
 	<table style="background-color: #63b8fd;width:98%;">
 		<tr style="background-color: #e5ecfe;">
